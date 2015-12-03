@@ -6,6 +6,7 @@ pages:
 docs_dir: content
 site_dir: build
 theme: readthedocs
+repo_url: https://github.com/vanzaj/tdd-pytest
 markdown_extensions:
   - smarty
   - toc:

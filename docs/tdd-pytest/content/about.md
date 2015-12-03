@@ -2,8 +2,8 @@
 
 [Test Driven Development with Python][book:TDDPy] book by  Harry Percival is a
 nice practical introduction to TDD with Python in the web development context.
-It shows the development of a simple [Django][web:django] based web app with
-testing based on [unittest][pydoc:unittest] and [Selenium][web:selenium]. Very
+It starts with the development of a simple [Django][web:django] based web app
+using [unittest][pydoc:unittest] and [Selenium][web:selenium] for testing. Very
 common setup.  Here we will develop the same app using [Flask][web:flask] and
 test it with [pytest][web:pytest] + [pytest-splinter][web:pytest-splinter]
 and [pytest-bdd][web:pytest-bdd] extensions.
