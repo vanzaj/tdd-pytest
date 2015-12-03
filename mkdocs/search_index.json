@@ -1,17 +1,17 @@
 {
     "docs": [
         {
-            "location": "/about/",
+            "location": "/",
             "text": "Test driven development with pytest\n\u00b6\n\n\nTest Driven Development with Python\n book by  Harry Percival is a\nnice practical introduction to TDD with Python in the web development context.\nIt starts with the development of a simple \nDjango\n based web app\nusing \nunittest\n and \nSelenium\n for testing. Very\ncommon setup.  Here we will develop the same app using \nFlask\n and\ntest it with \npytest\n + \npytest-splinter\n\nand \npytest-bdd\n extensions.\n\n\nThis guide is aimed at intermediate level developers with some experience in web\nprogramming. \u201cIntermediate\u201d means familiarity with things like \u201curl routing\u201d,\n\u201chttp requests\u201d, \u201chtml templating\u201d and the general MVC pattern.  There is little\nexplanation and comments about the code.  It is not a \u201ctranslation\u201d of Harry\u2019s\nbook.  Get and read the book or at least checkout the preface and some beginning\nchapters to get more context.\n\n\nConventions\n\u00b6\n\n\nThere are two types of code blocks:\n\n\ncommand line \u2013 what you need to type in a terminal (\n$\n indicates standard\n\nbash\n shell prompt)\n\n\n$ whoami\nivan\n$ python -V\nPython 3.5.0\n\n\n\n\npython code \u2013 what you need to type inside a text editor (the first line\nstarting with \n#\n indicates the path to file relative to project\u2019s root directory.\n\n\n# path/to/tests/test_file.py\nimport pytest\n\ndef test_sanity():\n    assert 2 + 2 == 4",
             "title": "About"
         },
         {
-            "location": "/about/#test-driven-development-with-pytest",
+            "location": "/#test-driven-development-with-pytest",
             "text": "Test Driven Development with Python  book by  Harry Percival is a\nnice practical introduction to TDD with Python in the web development context.\nIt starts with the development of a simple  Django  based web app\nusing  unittest  and  Selenium  for testing. Very\ncommon setup.  Here we will develop the same app using  Flask  and\ntest it with  pytest  +  pytest-splinter \nand  pytest-bdd  extensions.  This guide is aimed at intermediate level developers with some experience in web\nprogramming. \u201cIntermediate\u201d means familiarity with things like \u201curl routing\u201d,\n\u201chttp requests\u201d, \u201chtml templating\u201d and the general MVC pattern.  There is little\nexplanation and comments about the code.  It is not a \u201ctranslation\u201d of Harry\u2019s\nbook.  Get and read the book or at least checkout the preface and some beginning\nchapters to get more context.",
             "title": "Test driven development with pytest"
         },
         {
-            "location": "/about/#conventions",
+            "location": "/#conventions",
             "text": "There are two types of code blocks:  command line \u2013 what you need to type in a terminal ( $  indicates standard bash  shell prompt)  $ whoami\nivan\n$ python -V\nPython 3.5.0  python code \u2013 what you need to type inside a text editor (the first line\nstarting with  #  indicates the path to file relative to project\u2019s root directory.  # path/to/tests/test_file.py\nimport pytest\n\ndef test_sanity():\n    assert 2 + 2 == 4",
             "title": "Conventions"
         },
