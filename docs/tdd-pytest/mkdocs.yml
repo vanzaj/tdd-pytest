@@ -1,0 +1,12 @@
+site_name: TDD with pytest
+pages:
+  - 'About': about.md
+  - 'TDD Basics': tdd-basics.md
+  - 'TDD Advanced': tdd-advanced.md
+docs_dir: content
+site_dir: build
+theme: readthedocs
+markdown_extensions:
+  - smarty
+  - toc:
+      permalink: True
