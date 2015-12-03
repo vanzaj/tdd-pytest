@@ -80,7 +80,6 @@ Rerun the test and see it pass.
 At this point you should have the following files in your project dir:
 
 ```
-├── setup.cfg
 ├── tests
 │   └── functional_test.py
 ├── todoapp

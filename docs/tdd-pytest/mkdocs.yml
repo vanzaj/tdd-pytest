@@ -1,6 +1,6 @@
 site_name: TDD with pytest
 pages:
-  - 'About': about.md
+  - 'About': index.md
   - 'TDD Basics': tdd-basics.md
   - 'TDD Advanced': tdd-advanced.md
 docs_dir: content
