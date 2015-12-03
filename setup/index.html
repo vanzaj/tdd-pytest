@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Setup - TDD with pytest</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">TDD with pytest</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="..">Introduction</a>
+                    </li>
+                
+                
+                
+                    <li class="active">
+                        <a href="./">Setup</a>
+                    </li>
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li >
+                        <a rel="next" href="..">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li class="disabled">
+                        <a rel="prev" >
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#setup">Setup</a></li>
+        
+    
+        <li class="main "><a href="#extending-the-functional-test">Extending the functional test</a></li>
+        
+    
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h2 id="setup">Setup</h2>
+<pre><code class="text">$ cd ~/Projects
+$ mkdir tdd-todoapp
+$ cd tdd-todoapp
+$ pyvenv venv
+$ . venv/bin/activate
+$ python -V
+Python 3.5.0
+
+$ pip install Flask
+$ pip install pytest pytest-xdist pytest-splinter
+</code></pre>
+
+<p>Basic test and app setup:</p>
+<pre><code class="text">$ mkdir todoapp &amp;&amp; mkdir tests
+$ touch tests/functional_tests.py
+</code></pre>
+
+<pre><code class="python"># functional_tests.py
+
+from splinter import Browser
+
+BASE_URL = 'http://localhost:5000'
+
+with Browser() as browser:
+    browser.visit(BASE_URL)
+    assert browser.is_text_present('hello world')
+</code></pre>
+
+<p>Run the test and see it fail.</p>
+<pre><code class="text">$ python tests/functional_test.py
+Traceback (most recent call last):
+  File &quot;tests/functional_test.py&quot;, line 8, in &lt;module&gt;
+      assert browser.is_text_present('hello world')
+      AssertionError
+</code></pre>
+
+<p>Create a basic flask app in <code>todoapp/__init__.py</code></p>
+<pre><code class="python">from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'hello world'
+
+
+    if __name__ == &quot;__main__&quot;:
+        app.run()
+</code></pre>
+
+<p>Open another terminal, activate <code>venv</code>, and run the app:</p>
+<pre><code class="text">$ python todoapp/__init__.py
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+</code></pre>
+
+<p>Rerun the test and see it pass.</p>
+<h2 id="extending-the-functional-test">Extending the functional test</h2>
+<p>We can use <code>functional_test.py</code> to guide the development of the todo app.
+This is sometimes called "Readme-driven-development".</p>
+<pre><code class="python"># tests/functional_test.py
+
+from splinter import Browser
+
+
+BASE_URL = 'http://localhost:5000'
+
+with Browser() as browser:
+    browser.visit(BASE_URL)
+        assert browser.is_text_present('hello world')
+
+
+# Edith has heard about a cool new online to-do app.
+# She goes to check out its homepage
+
+# She notices the page title and header mention to-do lists
+
+# She is invited to enter a to-do item straight away
+
+# She types &quot;Buy peacock feathers&quot; into a text box (Edith's hobby
+# is tying fly-fishing lures)
+
+# When she hits enter, the page updates, and now the page lists
+# &quot;1: Buy peacock feathers&quot; as an item in a to-do list
+
+# There is still a text box inviting her to add another item. She
+# enters &quot;Use peacock feathers to make a fly&quot; (Edith is very methodical)
+
+# The page updates again, and now shows both items on her list
+
+# Edith wonders whether the site will remember her list. Then she sees
+# that the site has generated a unique URL for her -- there is some
+# explanatory text to that effect.
+
+# She visits that URL - her to-do list is still there.
+
+# Satisfied, she goes back to sleep
+</code></pre>
+
+<p><code>unittest</code> is the standard python module for creating and running tests.
+<code>pytest</code> is an alternative testing framework which is arguably more pythonic
+(requires less boilerplate code) and simple to use. We can adapt
+<code>functional_test.py</code> to test "check homepage" feature with <code>pytest</code> as
+follows:</p>
+<pre><code class="python">import pytest
+from splinter import Browser
+
+@pytest.yield_fixture(scope='session')
+def browser():
+    b = Browser()
+    yield b
+    b.quit()
+
+
+BASE_URL = 'http://localhost:5000'
+
+def _r(route):
+    if not route.startswith('/'):
+        route = '/' + route
+    return '%s%s' % (BASE_URL, route)
+
+
+# Edith has heard about a cool new online to-do app.
+# She goes to check out its homepage
+def test_can_check_homepage(browser):
+    browser.visit(_r('/'))
+    assert browser.is_text_present('hello world')
+
+# She notices the page title and header mention to-do lists
+# ...
+</code></pre>
+
+<p>Note how the <code>browser</code> instance has been converted into a function decorated as
+<code>yield_fixture</code>. This is the replacement of <code>setUp()</code> and <code>tearDown()</code> methods
+of a <code>unittest.TestCase</code>. Pytest fixtures are then passed to test functions as
+arguments. It is possible to use <code>class</code>s to organize tests, but it is not
+required.</p>
+<p>Before running <code>py.test</code>, create a <code>setup.cfg</code> to exclude <code>venv</code> and <code>.git</code> from
+tests auto-discovery.</p>
+<pre><code class="text">[pytest]
+norecursedirs = .git venv
+</code></pre>
+
+<p>Now run the test:</p>
+<pre><code class="text">$ py.test -v
+=================================== test session starts ====================================
+platform darwin -- Python 3.5.0, pytest-2.8.3, py-1.4.31, pluggy-0.3.1 -- /Users/ivan/Projects/tdd-todoapp/venv/bin/python3.5
+cachedir: .cache
+rootdir: /Users/ivan/Projects/tdd-todoapp, inifile: setup.cfg
+plugins: splinter-1.7.0, xdist-1.13.1
+collected 1 items
+
+tests/functional_test.py::test_can_check_homepage PASSED
+
+======================= 1 passed, 1 pytest-warnings in 2.34 seconds ========================
+</code></pre>
+
+<p>If you want to see what is causing <code>pytest-warnings</code>, run <code>py.test -ra</code>.</p></div>
+            
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

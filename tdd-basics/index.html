@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>TDD Basics - TDD with pytest</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "TDD Basics";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../about/" class="icon icon-home"> TDD with pytest</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../about/">About</a>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href="./">TDD Basics</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#tdd-basics">TDD Basics</a></li>
+                
+                    <li><a class="toctree-l4" href="#project-setup">Project setup</a></li>
+                
+                    <li><a class="toctree-l4" href="#starting-the-actual-app">Starting the actual app</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="../tdd-advanced/">TDD Advanced</a>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../about/">TDD with pytest</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../about/">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>TDD Basics</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/vanzaj/tdd-pytest" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="tdd-basics">TDD Basics<a class="headerlink" href="#tdd-basics" title="Permanent link">&para;</a></h1>
+<p>Here we will build a simple todo app following roughly the same steps as in the
+Part I of <a href="http://chimera.labs.oreilly.com/books/1234000000754">TDD with Python</a> book.</p>
+<h2 id="project-setup">Project setup<a class="headerlink" href="#project-setup" title="Permanent link">&para;</a></h2>
+<p>Before anything else, we need to create the project&rsquo;s directory structure and
+install minimal requirments into a <code>virtualenv</code>. Then create a &ldquo;failing&rdquo;
+test, write a minimal Flask app, and get the test to pass.</p>
+<pre><code class="bash">$ cd ~/Projects
+$ mkdir tdd-todoapp
+$ cd tdd-todoapp
+$ pyvenv venv
+$ . venv/bin/activate
+$ python -V
+Python 3.5.0
+
+$ pip install Flask
+$ pip install pytest pytest-xdist pytest-splinter
+</code></pre>
+
+<p>Create the <code>app</code> and <code>tests</code> dirs:</p>
+<pre><code class="bash">$ mkdir todoapp &amp;&amp; mkdir tests
+$ touch tests/functional_tests.py
+</code></pre>
+
+<pre><code class="python"># tests/functional_tests.py
+from splinter import Browser
+
+BASE_URL = 'http://localhost:5000'
+
+with Browser() as browser:
+    browser.visit(BASE_URL)
+    assert browser.is_text_present('hello world')
+</code></pre>
+
+<p>Run the test and see it fail.</p>
+<pre><code>$ python tests/functional_test.py
+Traceback (most recent call last):
+  File &quot;tests/functional_test.py&quot;, line 8, in &lt;module&gt;
+      assert browser.is_text_present('hello world')
+      AssertionError
+</code></pre>
+
+<p>Create a basic flask app:</p>
+<pre><code class="python"># todoapp/__init__.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'hello world'
+
+if __name__ == &quot;__main__&quot;:
+    app.run()
+</code></pre>
+
+<p>Open another terminal, activate <code>venv</code>, and run the app:</p>
+<pre><code class="bash">$ python todoapp/__init__.py
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+</code></pre>
+
+<p>Rerun the test and see it pass.</p>
+<p>At this point you should have the following files in your project dir:</p>
+<pre><code>├── setup.cfg
+├── tests
+│   └── functional_test.py
+├── todoapp
+│   └── __init__.py
+└── venv
+    ├── bin
+    ├── include
+    ...
+</code></pre>
+
+<h2 id="starting-the-actual-app">Starting the actual app<a class="headerlink" href="#starting-the-actual-app" title="Permanent link">&para;</a></h2>
+<p>We can use <code>functional_test.py</code> to guide the development of the todo app.  This
+can be as simple as using comments to write a walkthrough the app&rsquo;s features by
+an imaginary user. This is a variation on
+&ldquo;<a href="http://tom.preston-werner.com/2010/08/23/readme-driven-development.html">Readme driven development</a>&rdquo; theme.</p>
+<pre><code class="python"># tests/functional_test.py
+from splinter import Browser
+
+BASE_URL = 'http://localhost:5000'
+
+with Browser() as browser:
+    browser.visit(BASE_URL)
+        assert browser.is_text_present('hello world')
+
+
+# Edith has heard about a cool new online to-do app.
+# She goes to check out its homepage
+
+# She notices the page title and header mention to-do lists
+
+# She is invited to enter a to-do item straight away
+
+# She types &quot;Buy peacock feathers&quot; into a text box (Edith's hobby
+# is tying fly-fishing lures)
+
+# When she hits enter, the page updates, and now the page lists
+# &quot;1: Buy peacock feathers&quot; as an item in a to-do list
+
+# There is still a text box inviting her to add another item. She
+# enters &quot;Use peacock feathers to make a fly&quot; (Edith is very methodical)
+
+# The page updates again, and now shows both items on her list
+
+# Edith wonders whether the site will remember her list. Then she sees
+# that the site has generated a unique URL for her -- there is some
+# explanatory text to that effect.
+
+# She visits that URL - her to-do list is still there.
+
+# Satisfied, she goes back to sleep
+</code></pre>
+
+<p><code>Unittest</code> is the standard Python module for creating and running tests.
+<code>Pytest</code> is an alternative testing framework. It is arguably more &ldquo;pythonic&rdquo;
+(requires less boilerplate code) and simpler to use. We can adapt
+<code>functional_test.py</code> to test the &ldquo;check homepage&rdquo; feature as follows:</p>
+<pre><code class="python"># tests/functional_test.py
+import pytest
+from splinter import Browser
+
+@pytest.yield_fixture(scope='session')
+def browser():
+    b = Browser()
+    yield b
+    b.quit()
+
+BASE_URL = 'http://localhost:5000'
+
+def _r(route):
+    &quot;&quot;&quot; routing helper &quot;&quot;&quot;
+    if not route.startswith('/'):
+        route = '/' + route
+    return '%s%s' % (BASE_URL, route)
+
+
+# Edith has heard about a cool new online to-do app.
+# She goes to check out its homepage
+def test_can_check_homepage(browser):
+    browser.visit(_r('/'))
+    assert browser.is_text_present('hello world')
+
+# She notices the page title and header mention to-do lists
+# ...
+</code></pre>
+
+<p>Note how the <code>browser</code> instance has been converted into a function decorated with
+<code>yield_fixture</code>. This is the equivalent of <code>setUp()</code> and <code>tearDown()</code> methods
+of a <code>unittest.TestCase</code>. Pytest fixtures are then passed to test functions as
+arguments. It is possible to organize tests into classes, but it is not
+required.</p>
+<p>Before running <code>pytest</code>, create a <code>setup.cfg</code> to exclude <code>venv</code> (and other dirs
+if needed) from being in the tests auto-discovery path.</p>
+<pre><code class="config">[pytest]
+norecursedirs = .git venv
+</code></pre>
+
+<p>Now run the test (note that <code>pytest</code>&lsquo;s runner is <code>py.test</code>):</p>
+<pre><code class="bash">$ py.test -v
+=================================== test session starts ====================================
+platform darwin -- Python 3.5.0, pytest-2.8.3, py-1.4.31, pluggy-0.3.1 -- /Users/ivan/Projects/tdd-todoapp/venv/bin/python3.5
+cachedir: .cache
+rootdir: /Users/ivan/Projects/tdd-todoapp, inifile: setup.cfg
+plugins: splinter-1.7.0, xdist-1.13.1
+collected 1 items
+
+tests/functional_test.py::test_can_check_homepage PASSED
+
+======================= 1 passed, 1 pytest-warnings in 2.34 seconds ========================
+</code></pre>
+
+<p>Use <code>py.test -ra</code> if you want to see what is causing <code>pytest-warnings</code>.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tdd-advanced/" class="btn btn-neutral float-right" title="TDD Advanced"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../about/" class="btn btn-neutral" title="About"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../about/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../tdd-advanced/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>
