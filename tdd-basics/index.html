@@ -121,9 +121,9 @@
 <p>Here we will build a simple todo app following roughly the same steps as in the
 Part I of <a href="http://chimera.labs.oreilly.com/books/1234000000754">TDD with Python</a> book.</p>
 <h2 id="project-setup">Project setup<a class="headerlink" href="#project-setup" title="Permanent link">&para;</a></h2>
-<p>Before anything else, we need to create the project&rsquo;s directory structure and
-install minimal requirments into a <code>virtualenv</code>. Then create a &ldquo;failing&rdquo;
-test, write a minimal Flask app, and get the test to pass.</p>
+<p>Fist of all we need to create the project&rsquo;s directory structure and install
+minimal requirments into a <code>virtualenv</code>. Then we create a &ldquo;failing&rdquo; test
+followed by a minimal Flask app, just to get the test to pass.</p>
 <pre><code class="bash">$ cd ~/Projects
 $ mkdir tdd-todoapp
 $ cd tdd-todoapp
@@ -159,7 +159,8 @@ Traceback (most recent call last):
       AssertionError
 </code></pre>
 
-<p>Create a basic flask app:</p>
+<p>Note that we haven&rsquo;t actually used <code>pytest</code> yet. <code>functional_test.py</code> is just
+a regular python script<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>. Now, create a basic flask app:</p>
 <pre><code class="python"># todoapp/__init__.py
 from flask import Flask
 
@@ -180,8 +181,7 @@ if __name__ == &quot;__main__&quot;:
 
 <p>Rerun the test and see it pass.</p>
 <p>At this point you should have the following files in your project dir:</p>
-<pre><code>├── setup.cfg
-├── tests
+<pre><code>├── tests
 │   └── functional_test.py
 ├── todoapp
 │   └── __init__.py
@@ -203,7 +203,7 @@ BASE_URL = 'http://localhost:5000'
 
 with Browser() as browser:
     browser.visit(BASE_URL)
-        assert browser.is_text_present('hello world')
+    assert browser.is_text_present('hello world')
 
 
 # Edith has heard about a cool new online to-do app.
@@ -235,7 +235,7 @@ with Browser() as browser:
 
 <p><code>Unittest</code> is the standard Python module for creating and running tests.
 <code>Pytest</code> is an alternative testing framework. It is arguably more &ldquo;pythonic&rdquo;
-(requires less boilerplate code) and simpler to use. We can adapt
+(requires less boilerplate code) and easier to use. We can adapt
 <code>functional_test.py</code> to test the &ldquo;check homepage&rdquo; feature as follows:</p>
 <pre><code class="python"># tests/functional_test.py
 import pytest
@@ -255,7 +255,6 @@ def _r(route):
         route = '/' + route
     return '%s%s' % (BASE_URL, route)
 
-
 # Edith has heard about a cool new online to-do app.
 # She goes to check out its homepage
 def test_can_check_homepage(browser):
@@ -266,11 +265,10 @@ def test_can_check_homepage(browser):
 # ...
 </code></pre>
 
-<p>Note how the <code>browser</code> instance has been converted into a function decorated with
-<code>yield_fixture</code>. This is the equivalent of <code>setUp()</code> and <code>tearDown()</code> methods
-of a <code>unittest.TestCase</code>. Pytest fixtures are then passed to test functions as
-arguments. It is possible to organize tests into classes, but it is not
-required.</p>
+<p>Note how the <code>browser</code> instance has been converted into a function decorated
+with <code>yield_fixture</code><sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup>. It does the job of both <code>setUp()</code> and <code>tearDown()</code> methods
+of a <code>unittest.TestCase</code>. It is possible to organize tests into classes, but it
+is not required.</p>
 <p>Before running <code>pytest</code>, create a <code>setup.cfg</code> to exclude <code>venv</code> (and other dirs
 if needed) from being in the tests auto-discovery path.</p>
 <pre><code class="config">[pytest]
@@ -292,6 +290,81 @@ tests/functional_test.py::test_can_check_homepage PASSED
 </code></pre>
 
 <p>Use <code>py.test -ra</code> if you want to see what is causing <code>pytest-warnings</code>.</p>
+<p>Back to the app. &ldquo;hello world&rdquo; is nice, but it has little to do with a todo app.
+The test should look more like:</p>
+<pre><code class="python"># Edith has heard about a cool new online to-do app.
+def test_can_check_homepage(browser):
+    # She goes to check out its homepage
+    browser.visit(_r('/'))
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
+</code></pre>
+
+<pre><code class="bash">$ py.test
+&lt;... skipped lines ...&gt;
+========================================= FAILURES =========================================
+_________________________________ test_can_check_homepage __________________________________
+
+browser = &lt;splinter.driver.webdriver.firefox.WebDriver object at 0x106a3d7b8&gt;
+
+    def test_can_check_homepage(browser):
+        # She goes to check out its homepage
+        browser.visit(_r('/'))
+        # She notices the page title and header mention to-do lists
+&gt;       assert 'To-Do' in browser.title
+E       assert 'To-Do' in ''
+&lt;... skipped lines ...&gt;
+</code></pre>
+
+<p>Note the last line. It shows the actual value of <code>browser.title</code> during the
+test run. Time to update the app:</p>
+<pre><code class="bash">$ mkdir todoapp/templates
+$ touch todoapp/templates/home.html
+</code></pre>
+
+<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;To-Do&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  &lt;h1&gt;My todos list&lt;/h1&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+</code></pre>
+
+<pre><code class="python"># todoapp/__init__.py
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+if __name__ == &quot;__main__&quot;:
+    app.run(debug=True)
+</code></pre>
+
+<p><code>py.test</code> should now pass.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>Non-trivial apps will have many tests organized in multiple functions or
+classes. That&rsquo;s when we need to use a &ldquo;test runner&rdquo; &ndash; a command that discovers
+and runs all the tests, and then reports which have passed and which have
+failed.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>Pytest fixtures must be callable objects passed to test functions as
+arguments. Inside a test function we get an instance of the return or yield
+object.&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
               
             </div>
           </div>
