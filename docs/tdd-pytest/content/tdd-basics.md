@@ -7,9 +7,9 @@ Part I of [TDD with Python][book:TDDPy] book.
 
 ## Project setup
 
-Before anything else, we need to create the project's directory structure and
-install minimal requirments into a `virtualenv`. Then create a "failing"
-test, write a minimal Flask app, and get the test to pass.
+Fist of all we need to create the project's directory structure and install
+minimal requirments into a `virtualenv`. Then we create a "failing" test
+followed by a minimal Flask app, just to get the test to pass.
 
 ```bash
 $ cd ~/Projects
@@ -52,7 +52,13 @@ Traceback (most recent call last):
       AssertionError
 ```
 
-Create a basic flask app:
+Note that we haven't actually used `pytest` yet. `functional_test.py` is just
+a regular python script[^1]. Now, create a basic flask app:
+
+[^1]: Non-trivial apps will have many tests organized in multiple functions or
+classes. That's when we need to use a "test runner" -- a command that discovers
+and runs all the tests, and then reports which have passed and which have
+failed.
 
 ```python
 # todoapp/__init__.py
@@ -107,7 +113,7 @@ BASE_URL = 'http://localhost:5000'
 
 with Browser() as browser:
     browser.visit(BASE_URL)
-        assert browser.is_text_present('hello world')
+    assert browser.is_text_present('hello world')
 
 
 # Edith has heard about a cool new online to-do app.
@@ -139,7 +145,7 @@ with Browser() as browser:
 
 `Unittest` is the standard Python module for creating and running tests.
 `Pytest` is an alternative testing framework. It is arguably more "pythonic"
-(requires less boilerplate code) and simpler to use. We can adapt
+(requires less boilerplate code) and easier to use. We can adapt
 `functional_test.py` to test the "check homepage" feature as follows:
 
 ```python
@@ -161,7 +167,6 @@ def _r(route):
         route = '/' + route
     return '%s%s' % (BASE_URL, route)
 
-
 # Edith has heard about a cool new online to-do app.
 # She goes to check out its homepage
 def test_can_check_homepage(browser):
@@ -172,11 +177,15 @@ def test_can_check_homepage(browser):
 # ...
 ```
 
-Note how the `browser` instance has been converted into a function decorated with
-`yield_fixture`. This is the equivalent of `setUp()` and `tearDown()` methods
-of a `unittest.TestCase`. Pytest fixtures are then passed to test functions as
-arguments. It is possible to organize tests into classes, but it is not
-required.
+Note how the `browser` instance has been converted into a function decorated
+with `yield_fixture`[^2]. It does the job of both `setUp()` and `tearDown()` methods
+of a `unittest.TestCase`. It is possible to organize tests into classes, but it
+is not required.
+
+[^2]: Pytest fixtures must be callable objects passed to test functions as
+arguments. Inside a test function we get an instance of the return or yield
+object.
+
 
 Before running `pytest`, create a `setup.cfg` to exclude `venv` (and other dirs
 if needed) from being in the tests auto-discovery path.
@@ -203,3 +212,71 @@ tests/functional_test.py::test_can_check_homepage PASSED
 ```
 
 Use `py.test -ra` if you want to see what is causing `pytest-warnings`.
+
+Back to the app. "hello world" is nice, but it has little to do with a todo app.
+The test should look more like:
+
+```python
+# Edith has heard about a cool new online to-do app.
+def test_can_check_homepage(browser):
+    # She goes to check out its homepage
+    browser.visit(_r('/'))
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
+```
+
+```bash
+$ py.test
+<... skipped lines ...>
+========================================= FAILURES =========================================
+_________________________________ test_can_check_homepage __________________________________
+
+browser = <splinter.driver.webdriver.firefox.WebDriver object at 0x106a3d7b8>
+
+    def test_can_check_homepage(browser):
+        # She goes to check out its homepage
+        browser.visit(_r('/'))
+        # She notices the page title and header mention to-do lists
+>       assert 'To-Do' in browser.title
+E       assert 'To-Do' in ''
+<... skipped lines ...>
+```
+
+Note the last line. It shows the actual value of `browser.title` during the
+test run. Time to update the app:
+
+```bash
+$ mkdir todoapp/templates
+$ touch todoapp/templates/home.html
+```
+
+```html
+<!-- todoapp/templates/home.html -->
+<html>
+<head>
+  <title>To-Do</title>
+</head>
+
+<body>
+  <h1>My todos list</h1>
+</body>
+
+</html>
+```
+
+```python
+# todoapp/__init__.py
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+`py.test` should now pass.
+

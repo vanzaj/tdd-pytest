@@ -11,6 +11,7 @@ def browser():
 
 BASE_URL = 'http://localhost:5000'
 
+
 def _r(route):
     if not route.startswith('/'):
         route = '/' + route
@@ -18,13 +19,11 @@ def _r(route):
 
 
 # Edith has heard about a cool new online to-do app.
-# She goes to check out its homepage
 def test_can_check_homepage(browser):
+    # She goes to check out its homepage
     browser.visit(_r('/'))
-    assert browser.is_text_present('hello world')
-
-# She notices the page title and header mention to-do lists
-#assert 'To-Do' in browser.title
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
 
 # She is invited to enter a to-do item straight away
 
