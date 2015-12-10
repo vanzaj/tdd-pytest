@@ -280,3 +280,77 @@ if __name__ == "__main__":
 
 `py.test` should now pass.
 
+
+## Unit tests vs functional tests
+
+The tests so far are called "functional" because they test an application from
+the user perspective; open a browser, visit a url,... These tests work without
+any knowledge about the app's implementation details. Almost any kind of web
+application, written in Python or another language, can be tested with `pytest`
+and `splinter`. Unit tests (the concept and not the `unittest` module) on the
+other hand are supposed to test an application from the developer point of
+view.  Unit tests should cover very specific parts of code. Normally, there
+should be many more unit tests than functional tests. Because of that unit
+tests must be fast. Opening and closing browsers is not very useful on the
+context of unit tests. As described in the TDDPy book, the development process
+goes as follows:
+
+1. Start by writing a functional test, describing the new functionality from
+    the user’s point of view.
+2. Once we have a functional test that fails, we start to think about how to
+	write code that can get it to pass (or at least to get past its current
+	failure). We now use one or more unit tests to define how we want our code to
+	behave—the idea is that each line of production code we write should be tested
+	by (at least) one of our unit tests.
+3. Once we have a failing unit test, we write the smallest amount of
+	application code we can, just enough to get the unit test to pass. We may
+	iterate between steps 2 and 3 a few times, until we think the functional test
+	will get a little further.
+4. Now we can rerun our functional tests and see if they pass, or get a little
+	further. That may prompt us to write some new unit tests, and some new code,
+	and so on.
+
+Let's create a unit test for the todo app which does the same thing as
+`test_can_test_homepage` inside `functional_test.py`:
+
+```python
+# tests/unit_test.py
+
+import pytest
+import todoapp
+
+@pytest.fixture(scope='session')
+def client():
+    todoapp.app.config['TESTING'] = True
+    return todoapp.app.test_client()
+
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    assert '<title>To-Do</title>' in str(rsp.data)
+```
+
+and run it
+
+```bash
+$ py.test tests/unit_test.py
+========================================== ERRORS ==========================================
+___________________________ ERROR collecting tests/unit_test.py ____________________________
+tests/unit_test.py:2: in <module>
+    import todoapp
+E   ImportError: No module named 'todoapp'
+```
+
+The app's module is not in Python's path, so `pytest` can't import it. The
+simplest fix is to set the `PYTHONPATH` shell variable to the current dir:
+
+```bash
+$ export PYTHONPATH='.'
+
+$ py.test -v tests/unit_test.py
+=================================== test session starts ====================================
+
+tests/unit_test.py::test_home_page_returns_correct_html PASSED
+
+======================= 1 passed, 1 pytest-warnings in 0.02 seconds
+```
