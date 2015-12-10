@@ -68,6 +68,8 @@
                 
                     <li><a class="toctree-l4" href="#starting-the-actual-app">Starting the actual app</a></li>
                 
+                    <li><a class="toctree-l4" href="#unit-tests-vs-functional-tests">Unit tests vs functional tests</a></li>
+                
             
             </ul>
         
@@ -122,8 +124,9 @@
 Part I of <a href="http://chimera.labs.oreilly.com/books/1234000000754">TDD with Python</a> book.</p>
 <h2 id="project-setup">Project setup<a class="headerlink" href="#project-setup" title="Permanent link">&para;</a></h2>
 <p>Fist of all we need to create the project&rsquo;s directory structure and install
-minimal requirments into a <code>virtualenv</code>. Then we create a &ldquo;failing&rdquo; test
-followed by a minimal Flask app, just to get the test to pass.</p>
+minimal requirements into a &ldquo;virtualenv&rdquo;. Then we write the first test which
+should obviously &ldquo;fail&rdquo; since there is no actual application code written at
+this point. And then we write a minimal Flask app, just to get the test to pass.</p>
 <pre><code class="bash">$ cd ~/Projects
 $ mkdir tdd-todoapp
 $ cd tdd-todoapp
@@ -193,7 +196,7 @@ if __name__ == &quot;__main__&quot;:
 
 <h2 id="starting-the-actual-app">Starting the actual app<a class="headerlink" href="#starting-the-actual-app" title="Permanent link">&para;</a></h2>
 <p>We can use <code>functional_test.py</code> to guide the development of the todo app.  This
-can be as simple as using comments to write a walkthrough the app&rsquo;s features by
+can be as simple as using comments to write a walk-through the app&rsquo;s features by
 an imaginary user. This is a variation on
 &ldquo;<a href="http://tom.preston-werner.com/2010/08/23/readme-driven-development.html">Readme driven development</a>&rdquo; theme.</p>
 <pre><code class="python"># tests/functional_test.py
@@ -234,9 +237,9 @@ with Browser() as browser:
 </code></pre>
 
 <p><code>Unittest</code> is the standard Python module for creating and running tests.
-<code>Pytest</code> is an alternative testing framework. It is arguably more &ldquo;pythonic&rdquo;
-(requires less boilerplate code) and easier to use. We can adapt
-<code>functional_test.py</code> to test the &ldquo;check homepage&rdquo; feature as follows:</p>
+<code>Pytest</code> is an alternative testing framework. It requires less boilerplate code
+and is arguably easier to use. We can adapt <code>functional_test.py</code> to test the
+&ldquo;check homepage&rdquo; feature as follows:</p>
 <pre><code class="python"># tests/functional_test.py
 import pytest
 from splinter import Browser
@@ -349,14 +352,81 @@ if __name__ == &quot;__main__&quot;:
 </code></pre>
 
 <p><code>py.test</code> should now pass.</p>
+<h2 id="unit-tests-vs-functional-tests">Unit tests vs functional tests<a class="headerlink" href="#unit-tests-vs-functional-tests" title="Permanent link">&para;</a></h2>
+<p>The tests so far are called &ldquo;functional&rdquo; because they test an application from
+the user perspective; open a browser, visit a url, etc. These tests work without
+any knowledge about the app&rsquo;s implementation details. Almost any kind of web
+application, written in Python or another language, can be tested with <code>pytest</code>
+and <code>splinter</code>. On the other hand, unit tests (the concept and not the
+<code>unittest</code> module) are supposed to test an application from the developer point
+of view.  Unit tests should cover very specific parts of code. Normally, there
+should be many more unit tests than functional tests.  Because of that unit
+tests must be fast. Opening and closing browsers is not very useful on the
+context of unit tests. As described in the TDDPy book, the development process
+goes as follows:</p>
+<ol>
+<li>Start by writing a functional test, describing the new functionality from
+    the user’s point of view.</li>
+<li>Once we have a functional test that fails, we start to think about how to
+    write code that can get it to pass (or at least to get past its current
+    failure). We now use one or more unit tests to define how we want our code to
+    behave—the idea is that each line of production code we write should be tested
+    by (at least) one of our unit tests.</li>
+<li>Once we have a failing unit test, we write the smallest amount of
+    application code we can, just enough to get the unit test to pass. We may
+    iterate between steps 2 and 3 a few times, until we think the functional test
+    will get a little further.</li>
+<li>Now we can rerun our functional tests and see if they pass, or get a little
+    further. That may prompt us to write some new unit tests, and some new code,
+    and so on.</li>
+</ol>
+<p>Let&rsquo;s create a unit test for the todo app which does the same thing as
+the <code>test_can_check_homepage()</code> inside <code>functional_test.py</code>:</p>
+<pre><code class="python"># tests/unit_test.py
+
+import pytest
+import todoapp
+
+@pytest.fixture(scope='session')
+def client():
+    todoapp.app.config['TESTING'] = True
+    return todoapp.app.test_client()
+
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    assert '&lt;title&gt;To-Do&lt;/title&gt;' in str(rsp.data)
+</code></pre>
+
+<p>and run it</p>
+<pre><code class="bash">$ py.test tests/unit_test.py
+========================================== ERRORS ==========================================
+___________________________ ERROR collecting tests/unit_test.py ____________________________
+tests/unit_test.py:2: in &lt;module&gt;
+    import todoapp
+E   ImportError: No module named 'todoapp'
+</code></pre>
+
+<p>The app&rsquo;s module is not in Python&rsquo;s path, so <code>pytest</code> can&rsquo;t import it. The
+simplest fix is to set the <code>PYTHONPATH</code> shell variable to the current dir:</p>
+<pre><code class="bash">$ export PYTHONPATH='.'
+
+$ py.test -v tests/unit_test.py
+=================================== test session starts ====================================
+
+tests/unit_test.py::test_home_page_returns_correct_html PASSED
+
+======================= 1 passed, 1 pytest-warnings in 0.02 seconds
+</code></pre>
+
+<p>0.02 seconds is much better than 2.5 seconds needed to start a browser. </p>
 <div class="footnote">
 <hr />
 <ol>
 <li id="fn:1">
 <p>Non-trivial apps will have many tests organized in multiple functions or
 classes. That&rsquo;s when we need to use a &ldquo;test runner&rdquo; &ndash; a command that discovers
-and runs all the tests, and then reports which have passed and which have
-failed.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+and runs all the tests, and then reports which ones have passed or failed.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:2">
 <p>Pytest fixtures must be callable objects passed to test functions as
