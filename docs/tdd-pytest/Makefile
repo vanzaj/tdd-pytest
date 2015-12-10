@@ -8,6 +8,6 @@ docs:
 
 ghp:
 	rm -rf ./build/*
-	mkdocs build &&  mkdocs gh-deploy
+	mkdocs gh-deploy
 
 .PHONY: help
