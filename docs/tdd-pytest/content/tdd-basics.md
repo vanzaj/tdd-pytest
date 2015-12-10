@@ -8,8 +8,9 @@ Part I of [TDD with Python][book:TDDPy] book.
 ## Project setup
 
 Fist of all we need to create the project's directory structure and install
-minimal requirments into a `virtualenv`. Then we create a "failing" test
-followed by a minimal Flask app, just to get the test to pass.
+minimal requirements into a "virtualenv". Then we write the first test which
+should obviously "fail" since there is no actual application code written at
+this point. And then we write a minimal Flask app, just to get the test to pass.
 
 ```bash
 $ cd ~/Projects
@@ -57,8 +58,7 @@ a regular python script[^1]. Now, create a basic flask app:
 
 [^1]: Non-trivial apps will have many tests organized in multiple functions or
 classes. That's when we need to use a "test runner" -- a command that discovers
-and runs all the tests, and then reports which have passed and which have
-failed.
+and runs all the tests, and then reports which ones have passed or failed.
 
 ```python
 # todoapp/__init__.py
@@ -99,7 +99,7 @@ At this point you should have the following files in your project dir:
 ## Starting the actual app
 
 We can use `functional_test.py` to guide the development of the todo app.  This
-can be as simple as using comments to write a walkthrough the app's features by
+can be as simple as using comments to write a walk-through the app's features by
 an imaginary user. This is a variation on
 "[Readme driven development][blog:RDD]" theme.
 
@@ -144,9 +144,9 @@ with Browser() as browser:
 ```
 
 `Unittest` is the standard Python module for creating and running tests.
-`Pytest` is an alternative testing framework. It is arguably more "pythonic"
-(requires less boilerplate code) and easier to use. We can adapt
-`functional_test.py` to test the "check homepage" feature as follows:
+`Pytest` is an alternative testing framework. It requires less boilerplate code
+and is arguably easier to use. We can adapt `functional_test.py` to test the
+"check homepage" feature as follows:
 
 ```python
 # tests/functional_test.py
