@@ -317,12 +317,12 @@ the `test_can_check_homepage()` inside `functional_test.py`:
 # tests/unit_test.py
 
 import pytest
-import todoapp
+from todoapp import app
 
 @pytest.fixture(scope='session')
 def client():
-    todoapp.app.config['TESTING'] = True
-    return todoapp.app.test_client()
+    app.config['TESTING'] = True
+    return app.test_client()
 
 def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
@@ -355,5 +355,107 @@ tests/unit_test.py::test_home_page_returns_correct_html PASSED
 ======================= 1 passed, 1 pytest-warnings in 0.02 seconds
 ```
 
-0.02 seconds is much better than 2.5 seconds needed to start a browser. 
+0.02 seconds is much better than 2.5 seconds needed to start a browser.
 
+Since we know that `home` view should return the `home.html` template,
+we can check returned html like:
+
+```python
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    tpl = app.jinja_env.get_template('home.html')
+    assert tpl.render() == rsp.data.decode('utf-8')
+```
+<br/>
+
+## Testing user interactions
+
+Time to get back to functional tests. The next step is to add user input
+functionality.
+
+```python
+# tests/function_test.html
+
+# ...
+
+# Edith has heard about a cool new online to-do app.
+def test_can_check_homepage(browser):
+    # She goes to check out its homepage
+    browser.visit(_r('/'))
+
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
+    header = browser.find_by_tag('h1').first
+    assert 'todos' in header.text
+
+    # She is invited to enter a to-do item straight away
+    inputbox = browser.find_by_id('id_new_item').first
+    assert inputbox.tag_name == 'input'
+    assert inputbox['placeholder'] == 'Enter a to-do item'
+
+    # ...
+```
+
+To fix this failing test, we need to fix the `home` tempalate.
+
+```html
+<body>
+  <h1>My todos list</h1>
+  <input id="id_new_item" placeholder="Enter a to-do item"/>
+</body>
+```
+
+Next step:
+
+```python
+# tests/function_test.py
+
+# ...
+
+    # She types "Buy peacock feathers" into a text box (Edith's hobby
+    # is tying fly-fishing lures)
+    inputbox.type('Buy peacock feathers')
+
+    # When she hits enter, the page updates, and now the page lists
+    # "1: Buy peacock feathers" as an item in a to-do list
+    inputbox.type('\n')
+    table = browser.find_by_id('id_list_table').first
+    rows = table.find_by_tag('tr')
+    assert any(row.text == '1: Buy peacock feathers' for row in rows)
+
+# ...
+```
+
+```html
+<body>
+  <h1>My todos list</h1>
+  <input id="id_new_item" placeholder="Enter a to-do item"/>
+  <table id="id_list_table">
+  </table>
+</body>
+```
+
+```bash
+$ py.test  tests/functional_test.py
+
+======================================== FAILURES ========================================
+________________________________ test_can_check_homepage _________________________________
+
+<... skipped lines ...>
+
+        rows = table.find_by_tag('tr')
+>       assert any(row.text == '1: Buy peacock feathers' for row in rows)
+E       assert any(<generator object test_can_check_homepage.<locals>.<genexpr> at 0x10738c780>)
+
+tests/functional_test.py:45: AssertionError
+```
+
+If you want a more explicit error message, change the assertion line like this:
+
+```python
+
+    assert any(row.text == '1: Buy peacock feathers' for row in rows), \
+           'New to-do item did not appear in the table'
+
+```

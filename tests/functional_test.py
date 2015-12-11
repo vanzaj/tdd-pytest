@@ -22,19 +22,32 @@ def _r(route):
 def test_can_check_homepage(browser):
     # She goes to check out its homepage
     browser.visit(_r('/'))
+
     # She notices the page title and header mention to-do lists
     assert 'To-Do' in browser.title
+    header = browser.find_by_tag('h1').first
+    assert 'todos' in header.text
 
-# She is invited to enter a to-do item straight away
+    # She is invited to enter a to-do item straight away
+    inputbox = browser.find_by_id('id_new_item').first
+    # assert inputbox.tag_name == 'input'
+    assert inputbox['placeholder'] == 'Enter a to-do item'
 
-# She types "Buy peacock feathers" into a text box (Edith's hobby
-# is tying fly-fishing lures)
+    # She types "Buy peacock feathers" into a text box (Edith's hobby
+    # is tying fly-fishing lures)
+    inputbox.type('Buy peacock feathers')
 
-# When she hits enter, the page updates, and now the page lists
-# "1: Buy peacock feathers" as an item in a to-do list
+    # When she hits enter, the page updates, and now the page lists
+    # "1: Buy peacock feathers" as an item in a to-do list
+    inputbox.type('\n')
+    table = browser.find_by_id('id_list_table').first
+    rows = table.find_by_tag('tr')
+    assert any(row.text == '1: Buy peacock feathers' for row in rows), \
+           'New to-do item did not appear in the table'
 
-# There is still a text box inviting her to add another item. She
-# enters "Use peacock feathers to make a fly" (Edith is very methodical)
+    # There is still a text box inviting her to add another item. She
+    # enters "Use peacock feathers to make a fly" (Edith is very methodical)
+    assert False, 'Finish all tests'
 
 # The page updates again, and now shows both items on her list
 

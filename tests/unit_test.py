@@ -1,14 +1,15 @@
 import pytest
-import todoapp
+from todoapp import app
 
 
 @pytest.fixture(scope='session')
 def client():
-    todoapp.app.config['TESTING'] = True
-    return todoapp.app.test_client()
+    app.config['TESTING'] = True
+    return app.test_client()
 
 
 def test_home_page_returns_correct_html(client):
-    response = client.get('/')
-    assert response.status == '200 OK'
-    assert '<title>To-Do</title>' in str(response.data)
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    tpl = app.jinja_env.get_template('home.html')
+    assert tpl.render() == rsp.data.decode('utf-8')
