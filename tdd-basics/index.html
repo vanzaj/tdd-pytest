@@ -70,6 +70,8 @@
                 
                     <li><a class="toctree-l4" href="#unit-tests-vs-functional-tests">Unit tests vs functional tests</a></li>
                 
+                    <li><a class="toctree-l4" href="#testing-user-interactions">Testing user interactions</a></li>
+                
             
             </ul>
         
@@ -385,12 +387,12 @@ the <code>test_can_check_homepage()</code> inside <code>functional_test.py</code
 <pre><code class="python"># tests/unit_test.py
 
 import pytest
-import todoapp
+from todoapp import app
 
 @pytest.fixture(scope='session')
 def client():
-    todoapp.app.config['TESTING'] = True
-    return todoapp.app.test_client()
+    app.config['TESTING'] = True
+    return app.test_client()
 
 def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
@@ -419,7 +421,97 @@ tests/unit_test.py::test_home_page_returns_correct_html PASSED
 ======================= 1 passed, 1 pytest-warnings in 0.02 seconds
 </code></pre>
 
-<p>0.02 seconds is much better than 2.5 seconds needed to start a browser. </p>
+<p>0.02 seconds is much better than 2.5 seconds needed to start a browser.</p>
+<p>Since we know that <code>home</code> view should return the <code>home.html</code> template,
+we can check returned html like:</p>
+<pre><code class="python">def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    tpl = app.jinja_env.get_template('home.html')
+    assert tpl.render() == rsp.data.decode('utf-8')
+</code></pre>
+
+<p><br/></p>
+<h2 id="testing-user-interactions">Testing user interactions<a class="headerlink" href="#testing-user-interactions" title="Permanent link">&para;</a></h2>
+<p>Time to get back to functional tests. The next step is to add user input
+functionality.</p>
+<pre><code class="python"># tests/function_test.html
+
+# ...
+
+# Edith has heard about a cool new online to-do app.
+def test_can_check_homepage(browser):
+    # She goes to check out its homepage
+    browser.visit(_r('/'))
+
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
+    header = browser.find_by_tag('h1').first
+    assert 'todos' in header.text
+
+    # She is invited to enter a to-do item straight away
+    inputbox = browser.find_by_id('id_new_item').first
+    assert inputbox.tag_name == 'input'
+    assert inputbox['placeholder'] == 'Enter a to-do item'
+
+    # ...
+</code></pre>
+
+<p>To fix this failing test, we need to fix the <code>home</code> tempalate.</p>
+<pre><code class="html">&lt;body&gt;
+  &lt;h1&gt;My todos list&lt;/h1&gt;
+  &lt;input id=&quot;id_new_item&quot; placeholder=&quot;Enter a to-do item&quot;/&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p>Next step:</p>
+<pre><code class="python"># tests/function_test.py
+
+# ...
+
+    # She types &quot;Buy peacock feathers&quot; into a text box (Edith's hobby
+    # is tying fly-fishing lures)
+    inputbox.type('Buy peacock feathers')
+
+    # When she hits enter, the page updates, and now the page lists
+    # &quot;1: Buy peacock feathers&quot; as an item in a to-do list
+    inputbox.type('\n')
+    table = browser.find_by_id('id_list_table').first
+    rows = table.find_by_tag('tr')
+    assert any(row.text == '1: Buy peacock feathers' for row in rows)
+
+# ...
+</code></pre>
+
+<pre><code class="html">&lt;body&gt;
+  &lt;h1&gt;My todos list&lt;/h1&gt;
+  &lt;input id=&quot;id_new_item&quot; placeholder=&quot;Enter a to-do item&quot;/&gt;
+  &lt;table id=&quot;id_list_table&quot;&gt;
+  &lt;/table&gt;
+&lt;/body&gt;
+</code></pre>
+
+<pre><code class="bash">$ py.test  tests/functional_test.py
+
+======================================== FAILURES ========================================
+________________________________ test_can_check_homepage _________________________________
+
+&lt;... skipped lines ...&gt;
+
+        rows = table.find_by_tag('tr')
+&gt;       assert any(row.text == '1: Buy peacock feathers' for row in rows)
+E       assert any(&lt;generator object test_can_check_homepage.&lt;locals&gt;.&lt;genexpr&gt; at 0x10738c780&gt;)
+
+tests/functional_test.py:45: AssertionError
+</code></pre>
+
+<p>If you want a more explicit error message, change the assertion line like this:</p>
+<pre><code class="python">
+    assert any(row.text == '1: Buy peacock feathers' for row in rows), \
+           'New to-do item did not appear in the table'
+
+</code></pre>
+
 <div class="footnote">
 <hr />
 <ol>
