@@ -22,7 +22,7 @@ $ python -V
 Python 3.5.0
 
 $ pip install Flask
-$ pip install pytest pytest-xdist pytest-splinter
+$ pip install pytest pytest-splinter
 ```
 
 Create the `app` and `tests` dirs:
@@ -43,7 +43,7 @@ with Browser() as browser:
     assert browser.is_text_present('hello world')
 ```
 
-Run the test and see it fail.
+Run the test. You should see an `AssertionError`.
 
 ```
 $ python tests/functional_test.py
@@ -327,7 +327,7 @@ def client():
 def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
     assert rsp.status == '200 OK'
-    assert '<title>To-Do</title>' in str(rsp.data)
+    assert '<title>To-Do</title>' in rsp.get_data(as_text=True)
 ```
 
 and run it
@@ -341,7 +341,7 @@ tests/unit_test.py:2: in <module>
 E   ImportError: No module named 'todoapp'
 ```
 
-The app's module is not in Python's path, so `pytest` can't import it. The
+The app's module is not in the Python's path, so `pytest` can't import it. The
 simplest fix is to set the `PYTHONPATH` shell variable to the current dir:
 
 ```bash
@@ -355,19 +355,34 @@ tests/unit_test.py::test_home_page_returns_correct_html PASSED
 ======================= 1 passed, 1 pytest-warnings in 0.02 seconds
 ```
 
-0.02 seconds is much better than 2.5 seconds needed to start a browser.
+0.02 seconds is much better compared to 2.5 seconds needed to start a browser.
 
-Since we know that `home` view should return the `home.html` template,
-we can check returned html like:
+Since we know that the `home` view should return `home.html` template,
+we can check the returned html like:
 
 ```python
 def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
     assert rsp.status == '200 OK'
     tpl = app.jinja_env.get_template('home.html')
-    assert tpl.render() == rsp.data.decode('utf-8')
+    assert tpl.render() == rsp.get_data(as_text=True)
 ```
-<br/>
+
+Your project dir should look like (excluding `*.pyc` and `__pycache__` dir):
+
+```
+├── setup.cfg
+├── tests
+│   ├── functional_test.py
+│   └── unit_test.py
+├── todoapp
+│   ├── __init__.py
+│   └── templates
+└── venv
+    ├── bin
+...
+```
+
 
 ## Testing user interactions
 

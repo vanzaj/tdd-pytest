@@ -1,8 +1,9 @@
 # Test Driven Development with pytest
 
-An extremely lightweight version of [Test Driven Development with Python][book:TDDPy]
-using [Flask][web:flask], [pytest][web:pytest],
-[pytest-splinter][web:pytest-splinter] and [pytest-bdd][web:pytest-bdd].
+Gentle introduction to testing in the web programming context. Somewhat inspired
+by [Test Driven Development with Python][book:TDDPy], but using
+[Flask][web:flask], [pytest][web:pytest], [pytest-splinter][web:pytest-splinter]
+and [pytest-bdd][web:pytest-bdd].
 
 [book:TDDPy]: http://chimera.labs.oreilly.com/books/1234000000754
 [web:flask]: http://flask.pocoo.org/
