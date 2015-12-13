@@ -138,7 +138,7 @@ $ python -V
 Python 3.5.0
 
 $ pip install Flask
-$ pip install pytest pytest-xdist pytest-splinter
+$ pip install pytest pytest-splinter
 </code></pre>
 
 <p>Create the <code>app</code> and <code>tests</code> dirs:</p>
@@ -156,7 +156,7 @@ with Browser() as browser:
     assert browser.is_text_present('hello world')
 </code></pre>
 
-<p>Run the test and see it fail.</p>
+<p>Run the test. You should see an <code>AssertionError</code>.</p>
 <pre><code>$ python tests/functional_test.py
 Traceback (most recent call last):
   File &quot;tests/functional_test.py&quot;, line 8, in &lt;module&gt;
@@ -397,7 +397,7 @@ def client():
 def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
     assert rsp.status == '200 OK'
-    assert '&lt;title&gt;To-Do&lt;/title&gt;' in str(rsp.data)
+    assert '&lt;title&gt;To-Do&lt;/title&gt;' in rsp.get_data(as_text=True)
 </code></pre>
 
 <p>and run it</p>
@@ -409,7 +409,7 @@ tests/unit_test.py:2: in &lt;module&gt;
 E   ImportError: No module named 'todoapp'
 </code></pre>
 
-<p>The app&rsquo;s module is not in Python&rsquo;s path, so <code>pytest</code> can&rsquo;t import it. The
+<p>The app&rsquo;s module is not in the Python&rsquo;s path, so <code>pytest</code> can&rsquo;t import it. The
 simplest fix is to set the <code>PYTHONPATH</code> shell variable to the current dir:</p>
 <pre><code class="bash">$ export PYTHONPATH='.'
 
@@ -421,17 +421,29 @@ tests/unit_test.py::test_home_page_returns_correct_html PASSED
 ======================= 1 passed, 1 pytest-warnings in 0.02 seconds
 </code></pre>
 
-<p>0.02 seconds is much better than 2.5 seconds needed to start a browser.</p>
-<p>Since we know that <code>home</code> view should return the <code>home.html</code> template,
-we can check returned html like:</p>
+<p>0.02 seconds is much better compared to 2.5 seconds needed to start a browser.</p>
+<p>Since we know that the <code>home</code> view should return <code>home.html</code> template,
+we can check the returned html like:</p>
 <pre><code class="python">def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
     assert rsp.status == '200 OK'
     tpl = app.jinja_env.get_template('home.html')
-    assert tpl.render() == rsp.data.decode('utf-8')
+    assert tpl.render() == rsp.get_data(as_text=True)
 </code></pre>
 
-<p><br/></p>
+<p>Your project dir should look like (excluding <code>*.pyc</code> and <code>__pycache__</code> dir):</p>
+<pre><code>├── setup.cfg
+├── tests
+│   ├── functional_test.py
+│   └── unit_test.py
+├── todoapp
+│   ├── __init__.py
+│   └── templates
+└── venv
+    ├── bin
+...
+</code></pre>
+
 <h2 id="testing-user-interactions">Testing user interactions<a class="headerlink" href="#testing-user-interactions" title="Permanent link">&para;</a></h2>
 <p>Time to get back to functional tests. The next step is to add user input
 functionality.</p>

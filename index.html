@@ -123,12 +123,17 @@ using <a href="https://docs.python.org/3.5/library/unittest.html">unittest</a> a
 common setup.  Here we will develop the same app using <a href="http://flask.pocoo.org/">Flask</a> and
 test it with <a href="http://pytest.org/">pytest</a> + <a href="https://pypi.python.org/pypi/pytest-splinter">pytest-splinter</a>
 and <a href="https://pypi.python.org/pypi/pytest-bdd">pytest-bdd</a> extensions.</p>
-<p>This guide is aimed at intermediate level developers with some experience in web
-programming. &ldquo;Intermediate&rdquo; means familiarity with things like &ldquo;url routing&rdquo;,
-&ldquo;http requests&rdquo;, &ldquo;html templating&rdquo; and the general MVC pattern.  There is little
-explanation and comments about the code.  It is not a &ldquo;translation&rdquo; of Harry&rsquo;s
-book.  Get and read the book or at least checkout the preface and some beginning
-chapters to get more context.</p>
+<p>This guide is aimed at developers with some experience in Python and web
+programming. This means some familiarity with things like &ldquo;url routing&rdquo;, &ldquo;http
+requests&rdquo;, &ldquo;html templating&rdquo; and the general MVC pattern. Basic knowledge about
+how to use the command line interface (we&rsquo;ll use <code>bash</code>) is also assumed.</p>
+<p>This is more of a barebones &ldquo;how-to&rdquo; guide. I&rsquo;m far from being a &ldquo;testing
+expert&rdquo;, and I don&rsquo;t want to get into why anybody should be doing TDD or get
+into the depths of what&rsquo;s a &ldquo;unit&rdquo;, &ldquo;functional&rdquo;, &ldquo;acceptance&rdquo; or &ldquo;integration&rdquo;
+test. You can read about this in Harry&rsquo;s book or elsewhere online; for example
+<a href="http://c2.com/cgi/wiki?TestDrivenDevelopment">here</a> or
+<a href="http://gojko.net/">here</a>.</p>
+<p>Both this guide and the source of the app are on <a href="https://github.com/vanzaj/tdd-pytest">github</a>.</p>
 <h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
 <p>There are two types of code blocks:</p>
 <p>command line &ndash; what you need to type in a terminal (<code>$</code> indicates standard
@@ -139,8 +144,9 @@ $ python -V
 Python 3.5.0
 </code></pre>
 
-<p>python code &ndash; what you need to type inside a text editor (the first line
-starting with <code>#</code> indicates the path to file relative to project&rsquo;s root directory.</p>
+<p>and python code &ndash; what you need to type inside a text editor (the first line
+starting with <code>#</code> indicates the path to file relative to project&rsquo;s root
+directory.</p>
 <pre><code class="python"># path/to/tests/test_file.py
 import pytest
 
@@ -194,5 +200,5 @@ def test_sanity():
 
 <!--
 MkDocs version : 0.14.0
-Build Date UTC : 2015-12-11 10:15:22.282234
+Build Date UTC : 2015-12-13 04:06:10.544035
 -->
