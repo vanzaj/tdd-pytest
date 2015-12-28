@@ -165,16 +165,13 @@ def browser():
 
 BASE_URL = 'http://localhost:5000'
 
-def _r(route):
-    """ routing helper """
-    if not route.startswith('/'):
-        route = '/' + route
-    return '%s%s' % (BASE_URL, route)
+def url(route):
+    return '{}/{}'.format(BASE_URL, route)
 
 # Edith has heard about a cool new online to-do app.
 # She goes to check out its homepage
 def test_can_check_homepage(browser):
-    browser.visit(_r('/'))
+    browser.visit(url('/'))
     assert browser.is_text_present('hello world')
 
 # She notices the page title and header mention to-do lists
@@ -182,17 +179,17 @@ def test_can_check_homepage(browser):
 ```
 
 Note how the `browser` instance has been converted into a function decorated
-with `yield_fixture`[^2]. It does the job of both `setUp()` and `tearDown()` methods
-of a `unittest.TestCase`. It is possible to organize tests into classes, but it
-is not required.
+with `yield_fixture`[^2]. It does the job of both `setUp()` and `tearDown()`
+methods of a `unittest.TestCase`. It is possible to organize tests into classes,
+but it is not required.
 
 [^2]: Pytest fixtures must be callable objects passed to test functions as
 arguments. Inside a test function we get an instance of the return or yield
 object.
 
 
-Before running `pytest`, create a `setup.cfg` to exclude `venv` (and other dirs
-if needed) from being in the tests auto-discovery path.
+Before running `pytest`, create a `setup.cfg` file to exclude `venv` (and other
+dirs if needed) from being in the tests auto-discovery path.
 
 ```config
 [pytest]
@@ -224,7 +221,7 @@ The test should look more like:
 # Edith has heard about a cool new online to-do app.
 def test_can_check_homepage(browser):
     # She goes to check out its homepage
-    browser.visit(_r('/'))
+    browser.visit(url('/'))
     # She notices the page title and header mention to-do lists
     assert 'To-Do' in browser.title
 ```
@@ -239,7 +236,7 @@ browser = <splinter.driver.webdriver.firefox.WebDriver object at 0x106a3d7b8>
 
     def test_can_check_homepage(browser):
         # She goes to check out its homepage
-        browser.visit(_r('/'))
+        browser.visit(url('/'))
         # She notices the page title and header mention to-do lists
 >       assert 'To-Do' in browser.title
 E       assert 'To-Do' in ''
@@ -288,16 +285,16 @@ if __name__ == "__main__":
 ## Unit tests vs functional tests
 
 The tests so far are called "functional" because they test an application from
-the user perspective; open a browser, visit a url, etc. These tests work without
-any knowledge about the app's implementation details. Almost any kind of web
-application, written in Python or another language, can be tested with `pytest`
-and `splinter`. On the other hand, unit tests (the concept and not the
-`unittest` module) are supposed to test an application from the developer point
-of view.  Unit tests should cover very specific parts of code. Normally, there
-should be many more unit tests than functional tests.  Because of that unit
-tests must be fast. Opening and closing browsers is not very useful on the
-context of unit tests. As described in the TDDPy book, the development process
-goes as follows:
+the perspective of a user; open a browser, visit a url, etc. These tests work
+without any knowledge about the app's implementation details. Almost any kind of
+web application, written in Python or another language, can be tested with
+`pytest` and `splinter`. On the other hand, unit tests (the concept and not the
+`unittest` module) are supposed to test an application from the developer's
+point of view. Unit tests should cover very specific and usually very small
+parts of code. Therefore, there should be many more unit tests than functional
+tests.  Because of that unit tests must be fast. Opening and closing browsers is
+not very useful in this context. As described in the TDDPy book, the development
+process goes as follows:
 
 1. Start by writing a functional test, describing the new functionality from
     the user's point of view.
@@ -314,8 +311,12 @@ goes as follows:
 	further. That may prompt us to write some new unit tests, and some new code,
 	and so on.
 
-Let's create a unit test for the todo app which does the same thing as
-the `test_can_check_homepage()` inside `functional_test.py`:
+Let's create a unit test for the todo app using flask's test client[^3] which
+does the same thing as the `test_can_check_homepage()` inside
+`functional_test.py`:
+
+[^3]: "client" is a generic way to refer to applications like web browsers
+running on the user's side.
 
 ```python
 # tests/unit_test.py
@@ -362,7 +363,7 @@ tests/unit_test.py::test_home_page_returns_correct_html PASSED
 0.02 seconds is much better compared to 2.5 seconds needed to start a browser.
 
 Since we know that the `home` view should return `home.html` template,
-we can check the returned html like:
+we can check the returned html as follows:
 
 ```python
 def test_home_page_returns_correct_html(client):
@@ -372,7 +373,8 @@ def test_home_page_returns_correct_html(client):
     assert tpl.render() == rsp.get_data(as_text=True)
 ```
 
-Your project dir should look like (excluding `*.pyc` and `__pycache__` dir):
+At this point your project dir should look like (excluding `*.pyc` and
+`__pycache__` dir):
 
 ```
 ├── setup.cfg
@@ -391,7 +393,33 @@ Your project dir should look like (excluding `*.pyc` and `__pycache__` dir):
 ## Testing user interactions
 
 Time to get back to functional tests. The next step is to add user input
-functionality.
+functionality. This means adding `<form>` and `<input>` elements in the app's
+html template. Let's do an explicit test for this inside `tests/unit_test.py`:
+
+```python
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '<form' in html
+    assert '<input' in html
+```
+
+Update the html template to make the test pass.
+
+```html
+<!-- todoapp/templates/home.html -->
+
+<body>
+  <h1>My todos list</h1>
+  <form>
+    <input type="text" id="new_todo_item"/>
+  </form>
+  </table>
+</body>
+```
+
+We can now update our functional test:
 
 ```python
 # tests/function_test.html
@@ -401,7 +429,7 @@ functionality.
 # Edith has heard about a cool new online to-do app.
 def test_can_check_homepage(browser):
     # She goes to check out its homepage
-    browser.visit(_r('/'))
+    browser.visit(url('/'))
 
     # She notices the page title and header mention to-do lists
     assert 'To-Do' in browser.title
@@ -409,36 +437,30 @@ def test_can_check_homepage(browser):
     assert 'todos' in header.text
 
     # She is invited to enter a to-do item straight away
-    inputbox = browser.find_by_id('id_new_item').first
-    assert inputbox.tag_name == 'input'
+    inputbox = browser.find_by_id('new_todo_item').first
     assert inputbox['placeholder'] == 'Enter a to-do item'
 
-    # ...
+    # She types "Buy peacock feathers" into a text box 
+    inputbox.type('Buy peacock feathers')
+
+    # When she hits enter...
+    inputbox.type('\n')
+    
+    # ...the page updates, and now the page lists
+    # "1: Buy peacock feathers" as an item in a to-do list
 ```
 
-To fix this failing test, we need to fix the `home` template.
+What-you-type-is-what-you-get...
+At this point we need to decide what to do when the user hits "Enter".
 
-```html
-<body>
-  <h1>My todos list</h1>
-  <input id="id_new_item" placeholder="Enter a to-do item"/>
-</body>
-```
 
-Next step:
 
 ```python
 # tests/function_test.py
 
 # ...
 
-    # She types "Buy peacock feathers" into a text box (Edith's hobby
-    # is tying fly-fishing lures)
-    inputbox.type('Buy peacock feathers')
 
-    # When she hits enter, the page updates, and now the page lists
-    # "1: Buy peacock feathers" as an item in a to-do list
-    inputbox.type('\n')
     table = browser.find_by_id('id_list_table').first
     rows = table.find_by_tag('tr')
     assert any(row.text == '1: Buy peacock feathers' for row in rows)

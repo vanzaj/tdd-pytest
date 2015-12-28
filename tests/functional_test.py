@@ -12,16 +12,14 @@ def browser():
 BASE_URL = 'http://localhost:5000'
 
 
-def _r(route):
-    if not route.startswith('/'):
-        route = '/' + route
-    return '%s%s' % (BASE_URL, route)
+def url(route):
+    return '{}/{}'.format(BASE_URL, route)
 
 
 # Edith has heard about a cool new online to-do app.
 def test_can_check_homepage(browser):
     # She goes to check out its homepage
-    browser.visit(_r('/'))
+    browser.visit(url('/'))
 
     # She notices the page title and header mention to-do lists
     assert 'To-Do' in browser.title
@@ -29,8 +27,7 @@ def test_can_check_homepage(browser):
     assert 'todos' in header.text
 
     # She is invited to enter a to-do item straight away
-    inputbox = browser.find_by_id('id_new_item').first
-    # assert inputbox.tag_name == 'input'
+    inputbox = browser.find_by_id('new_todo_item').first
     assert inputbox['placeholder'] == 'Enter a to-do item'
 
     # She types "Buy peacock feathers" into a text box (Edith's hobby
