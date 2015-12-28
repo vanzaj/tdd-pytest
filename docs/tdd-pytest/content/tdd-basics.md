@@ -19,7 +19,7 @@ $ cd tdd-todoapp
 $ pyvenv venv
 $ . venv/bin/activate
 $ python -V
-Python 3.5.0
+Python 3.5.
 
 $ pip install Flask
 $ pip install pytest pytest-splinter
@@ -28,9 +28,10 @@ $ pip install pytest pytest-splinter
 Create the `app` and `tests` dirs:
 
 ```bash
-$ mkdir todoapp && mkdir tests
-$ touch tests/functional_tests.py
+$ mkdir todoapp tests
 ```
+
+Edit `tests/functional_tests.py`:
 
 ```python
 # tests/functional_tests.py
@@ -43,7 +44,7 @@ with Browser() as browser:
     assert browser.is_text_present('hello world')
 ```
 
-Run the test. You should see an `AssertionError`.
+Run the test:
 
 ```
 $ python tests/functional_test.py
@@ -53,12 +54,16 @@ Traceback (most recent call last):
       AssertionError
 ```
 
-Note that we haven't actually used `pytest` yet. `functional_test.py` is just
-a regular python script[^1]. Now, create a basic flask app:
+`AssertionError` indicates test failure. Note that we haven't actually used
+`pytest` yet. The file containing our first test is just a regular python
+script[^1].
+
 
 [^1]: Non-trivial apps will have many tests organized in multiple functions or
 classes. That's when we need to use a "test runner" -- a command that discovers
 and runs all the tests, and then reports which ones have passed or failed.
+
+Now, create a basic flask app:
 
 ```python
 # todoapp/__init__.py
@@ -82,8 +87,7 @@ $ python todoapp/__init__.py
 ```
 
 Rerun the test and see it pass.
-
-At this point you should have the following files in your project dir:
+At this point you should have the following files in your project directory:
 
 ```
 ├── tests
@@ -100,7 +104,7 @@ At this point you should have the following files in your project dir:
 
 We can use `functional_test.py` to guide the development of the todo app.  This
 can be as simple as using comments to write a walk-through the app's features by
-an imaginary user. This is a variation on
+an imaginary user. This is a variation on the
 "[Readme driven development][blog:RDD]" theme.
 
 [blog:RDD]: http://tom.preston-werner.com/2010/08/23/readme-driven-development.html
@@ -145,7 +149,7 @@ with Browser() as browser:
 
 `Unittest` is the standard Python module for creating and running tests.
 `Pytest` is an alternative testing framework. It requires less boilerplate code
-and is arguably easier to use. We can adapt `functional_test.py` to test the
+and is somewhat easier to use. We can adapt `functional_test.py` to test the
 "check homepage" feature as follows:
 
 ```python
@@ -296,7 +300,7 @@ context of unit tests. As described in the TDDPy book, the development process
 goes as follows:
 
 1. Start by writing a functional test, describing the new functionality from
-    the user’s point of view.
+    the user's point of view.
 2. Once we have a functional test that fails, we start to think about how to
 	write code that can get it to pass (or at least to get past its current
 	failure). We now use one or more unit tests to define how we want our code to
@@ -412,7 +416,7 @@ def test_can_check_homepage(browser):
     # ...
 ```
 
-To fix this failing test, we need to fix the `home` tempalate.
+To fix this failing test, we need to fix the `home` template.
 
 ```html
 <body>

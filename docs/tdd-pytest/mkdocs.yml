@@ -7,6 +7,7 @@ docs_dir: content
 site_dir: build
 theme: readthedocs
 repo_url: https://github.com/vanzaj/tdd-pytest
+extra_css: ['extra.css']
 markdown_extensions:
   - smarty
   - footnotes
