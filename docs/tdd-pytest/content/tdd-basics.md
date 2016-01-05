@@ -396,7 +396,7 @@ At this point your project dir should look like (excluding `*.pyc` and
 
 Time to get back to functional tests. The next step is to add user input
 functionality. This means adding `<form>` and `<input>` elements in the app's
-html template. Let's do an explicit test for this inside `tests/unit_test.py` 
+html template. Let's do an explicit test for this inside `tests/unit_test.py`
 instead of testing full template:
 
 ```python
@@ -418,7 +418,7 @@ Update the html template to make the test pass.
 <body>
   <h1>My todos list</h1>
   <form>
-    <input type="text" id="new_todo_item"/>
+    <input id="new_todo_item" name="todo_text"/>
   </form>
   </table>
 </body>
@@ -445,58 +445,101 @@ def test_can_check_homepage(browser):
     inputbox = browser.find_by_id('new_todo_item').first
     assert inputbox['placeholder'] == 'Enter a to-do item'
 
-    # She types "Buy peacock feathers" into a text box 
+    # She types "Buy peacock feathers" into a text box
     inputbox.type('Buy peacock feathers')
 
     # When she hits enter...
     inputbox.type('\n')
-    
+
     # ...the page updates, and now the page lists
     # "1: Buy peacock feathers" as an item in a to-do list
 ```
 
 What-you-type-is-what-you-get...
 
-At this point we need to decide what to do when the user hits "Enter".
+At this point we need to decide what to do when the user hits "Enter" preferably
+without resorting to [css tricks][SO:form-wo-submit] and javascript. Turns out
+that an html form containing a single `<input>` is implicitly submitted on
+"Enter"[^4]. All we need to do is to specify that submit method is "POST" and to
+add a list or table to the template which will display submitted todo items. But
+write the tests first!
 
+[SO:form-wo-submit]: http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button
 
+[^4]: Introduced in HTML 2.0, and currently described under
+      [implicit submission](http://www.w3.org/TR/html5/forms.html#form-submission-0)
+      section of HTML 5 specification.
 
 ```python
-# tests/function_test.py
+# tests/unit_test.py
 
-# ...
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '<form' in html
+    assert '<input' in html
+    assert '<table' in html
 
-
-    table = browser.find_by_id('id_list_table').first
-    rows = table.find_by_tag('tr')
-    assert any(row.text == '1: Buy peacock feathers' for row in rows)
-
-# ...
+def test_home_page_accepts_post_request(client):
+    rsp = client.post('/', data={"todo_text": "do something useful"})
+    assert rsp.status == '200 OK'
+    assert 'do something useful' in rsp.get_data(as_text=True)
 ```
 
+Now update the template.
+
 ```html
+<!-- todoapp/templates/home.html -->
 <body>
   <h1>My todos list</h1>
-  <input id="id_new_item" placeholder="Enter a to-do item"/>
-  <table id="id_list_table">
-  </table>
+  <form method="POST">
+    <input id="new_todo_item" name="todo_text"/>
+  </form>
+
+  <table id="todo_list_table"></table>
 </body>
 ```
 
+Run unit tests.
+
 ```bash
-$ py.test  tests/functional_test.py
+$ py.test tests/unit_test.py
+================================ test session starts =================================
 
-======================================== FAILURES ========================================
-________________________________ test_can_check_homepage _________________________________
+    def test_home_page_accepts_post_request(client):
+        rsp = client.post('/')
+>       assert rsp.status == '200 OK'
+E       assert '405 METHOD NOT ALLOWED' == '200 OK'
+E         - 405 METHOD NOT ALLOWED
+E         + 200 OK
 
-<... skipped lines ...>
+tests/unit_test.py:21: AssertionError
+=============== 1 failed, 1 passed, 1 pytest-warnings in 0.03 seconds ================
 
-        rows = table.find_by_tag('tr')
->       assert any(row.text == '1: Buy peacock feathers' for row in rows)
-E       assert any(<generator object test_can_check_homepage.<locals>.<genexpr> at 0x10738c780>)
-
-tests/functional_test.py:45: AssertionError
 ```
+
+Flask routes accept only "GET" requests by default, but this is easily changed
+using `methods` keyword. We will also need to import flask's `request` object.
+
+
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    if request.method == 'POST':
+        new_item = request.form.get('todo_text')
+        return 'got new item: %s' % new_item
+    return render_template('home.html')
+```
+
+
+
+
 
 If you want a more explicit error message, change the assertion line like this:
 

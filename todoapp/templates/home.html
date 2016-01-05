@@ -5,9 +5,18 @@
 
 <body>
   <h1>My todos list</h1>
-  <form>
-    <input id="new_todo_item" placeholder="Enter a to-do item"/>
+  <form method="POST">
+    <input id="new_todo_item" name="todo_text" placeholder="Enter a to-do item"/>
   </form>
 </body>
 
+<table id="todo_list_table">
+  {% if todo_items %}
+  {% for item in todo_items %}
+  <tr><td>{{loop.index}}: {{ item }}</td></tr>
+  {% endfor %}
+  {% endif %}
+</table>
+
+</body>
 </html>

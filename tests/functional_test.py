@@ -37,7 +37,7 @@ def test_can_check_homepage(browser):
     # When she hits enter, the page updates, and now the page lists
     # "1: Buy peacock feathers" as an item in a to-do list
     inputbox.type('\n')
-    table = browser.find_by_id('id_list_table').first
+    table = browser.find_by_id('todo_list_table').first
     rows = table.find_by_tag('tr')
     assert any(row.text == '1: Buy peacock feathers' for row in rows), \
            'New to-do item did not appear in the table'
