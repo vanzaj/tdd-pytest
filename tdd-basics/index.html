@@ -451,7 +451,7 @@ we can check the returned html as follows:</p>
 <h2 id="testing-user-interactions">Testing user interactions<a class="headerlink" href="#testing-user-interactions" title="Permanent link">&para;</a></h2>
 <p>Time to get back to functional tests. The next step is to add user input
 functionality. This means adding <code>&lt;form&gt;</code> and <code>&lt;input&gt;</code> elements in the app&rsquo;s
-html template. Let&rsquo;s do an explicit test for this inside <code>tests/unit_test.py</code> 
+html template. Let&rsquo;s do an explicit test for this inside <code>tests/unit_test.py</code>
 instead of testing full template:</p>
 <pre><code class="python">def test_home_page_returns_correct_html(client):
     rsp = client.get('/')
@@ -468,7 +468,7 @@ instead of testing full template:</p>
 &lt;body&gt;
   &lt;h1&gt;My todos list&lt;/h1&gt;
   &lt;form&gt;
-    &lt;input type=&quot;text&quot; id=&quot;new_todo_item&quot;/&gt;
+    &lt;input id=&quot;new_todo_item&quot; name=&quot;todo_text&quot;/&gt;
   &lt;/form&gt;
   &lt;/table&gt;
 &lt;/body&gt;
@@ -493,7 +493,7 @@ def test_can_check_homepage(browser):
     inputbox = browser.find_by_id('new_todo_item').first
     assert inputbox['placeholder'] == 'Enter a to-do item'
 
-    # She types &quot;Buy peacock feathers&quot; into a text box 
+    # She types &quot;Buy peacock feathers&quot; into a text box
     inputbox.type('Buy peacock feathers')
 
     # When she hits enter...
@@ -504,39 +504,69 @@ def test_can_check_homepage(browser):
 </code></pre>
 
 <p>What-you-type-is-what-you-get&hellip;</p>
-<p>At this point we need to decide what to do when the user hits &ldquo;Enter&rdquo;.</p>
-<pre><code class="python"># tests/function_test.py
+<p>At this point we need to decide what to do when the user hits &ldquo;Enter&rdquo; preferably
+without resorting to <a href="http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button">css tricks</a> and javascript. Turns out
+that an html form containing a single <code>&lt;input&gt;</code> is implicitly submitted on
+&ldquo;Enter&rdquo;<sup id="fnref:4"><a class="footnote-ref" href="#fn:4" rel="footnote">4</a></sup>. All we need to do is to specify that submit method is &ldquo;POST&rdquo; and to
+add a list or table to the template which will display submitted todo items. But
+write the tests first!</p>
+<pre><code class="python"># tests/unit_test.py
 
-# ...
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '&lt;form' in html
+    assert '&lt;input' in html
+    assert '&lt;table' in html
 
-
-    table = browser.find_by_id('id_list_table').first
-    rows = table.find_by_tag('tr')
-    assert any(row.text == '1: Buy peacock feathers' for row in rows)
-
-# ...
+def test_home_page_accepts_post_request(client):
+    rsp = client.post('/', data={&quot;todo_text&quot;: &quot;do something useful&quot;})
+    assert rsp.status == '200 OK'
+    assert 'do something useful' in rsp.get_data(as_text=True)
 </code></pre>
 
-<pre><code class="html">&lt;body&gt;
+<p>Now update the template.</p>
+<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
+&lt;body&gt;
   &lt;h1&gt;My todos list&lt;/h1&gt;
-  &lt;input id=&quot;id_new_item&quot; placeholder=&quot;Enter a to-do item&quot;/&gt;
-  &lt;table id=&quot;id_list_table&quot;&gt;
-  &lt;/table&gt;
+  &lt;form method=&quot;POST&quot;&gt;
+    &lt;input id=&quot;new_todo_item&quot; name=&quot;todo_text&quot;/&gt;
+  &lt;/form&gt;
+
+  &lt;table id=&quot;todo_list_table&quot;&gt;&lt;/table&gt;
 &lt;/body&gt;
 </code></pre>
 
-<pre><code class="bash">$ py.test  tests/functional_test.py
+<p>Run unit tests.</p>
+<pre><code class="bash">$ py.test tests/unit_test.py
+================================ test session starts =================================
 
-======================================== FAILURES ========================================
-________________________________ test_can_check_homepage _________________________________
+    def test_home_page_accepts_post_request(client):
+        rsp = client.post('/')
+&gt;       assert rsp.status == '200 OK'
+E       assert '405 METHOD NOT ALLOWED' == '200 OK'
+E         - 405 METHOD NOT ALLOWED
+E         + 200 OK
 
-&lt;... skipped lines ...&gt;
+tests/unit_test.py:21: AssertionError
+=============== 1 failed, 1 passed, 1 pytest-warnings in 0.03 seconds ================
 
-        rows = table.find_by_tag('tr')
-&gt;       assert any(row.text == '1: Buy peacock feathers' for row in rows)
-E       assert any(&lt;generator object test_can_check_homepage.&lt;locals&gt;.&lt;genexpr&gt; at 0x10738c780&gt;)
+</code></pre>
 
-tests/functional_test.py:45: AssertionError
+<p>Flask routes accept only &ldquo;GET&rdquo; requests by default, but this is easily changed
+using <code>methods</code> keyword. We will also need to import flask&rsquo;s <code>request</code> object.</p>
+<pre><code class="python">from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    if request.method == 'POST':
+        new_item = request.form.get('todo_text')
+        return 'got new item: %s' % new_item
+    return render_template('home.html')
 </code></pre>
 
 <p>If you want a more explicit error message, change the assertion line like this:</p>
@@ -562,6 +592,11 @@ object.&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="J
 <li id="fn:3">
 <p>&ldquo;client&rdquo; is a generic way to refer to code or application running on the
 user&rsquo;s side (like web browsers) in the client-server software design model.&#160;<a class="footnote-backref" href="#fnref:3" rev="footnote" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>Introduced in HTML 2.0, and currently described under
+  <a href="http://www.w3.org/TR/html5/forms.html#form-submission-0">implicit submission</a>
+  section of HTML 5 specification.&#160;<a class="footnote-backref" href="#fnref:4" rev="footnote" title="Jump back to footnote 4 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
