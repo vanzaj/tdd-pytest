@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="./css/theme.css" type="text/css" />
   <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="./css/highlight.css">
+  <link href="./extra.css" rel="stylesheet">
 
   
   <script>
@@ -116,28 +117,29 @@
             <div class="section">
               
                 <h1 id="test-driven-development-with-pytest">Test driven development with pytest<a class="headerlink" href="#test-driven-development-with-pytest" title="Permanent link">&para;</a></h1>
-<p><a href="http://chimera.labs.oreilly.com/books/1234000000754">Test Driven Development with Python</a> book by  Harry Percival is a
-nice practical introduction to TDD with Python in the web development context.
+<p><a href="http://chimera.labs.oreilly.com/books/1234000000754">Test Driven Development with Python</a> book by  Harry Percival is
+a nice practical introduction to TDD with Python in the web development context.
 It starts with the development of a simple <a href="https://www.djangoproject.com/">Django</a> based web app
 using <a href="https://docs.python.org/3.5/library/unittest.html">unittest</a> and <a href="http://www.seleniumhq.org/">Selenium</a> for testing. Very
 common setup.  Here we will develop the same app using <a href="http://flask.pocoo.org/">Flask</a> and
-test it with <a href="http://pytest.org/">pytest</a> + <a href="https://pypi.python.org/pypi/pytest-splinter">pytest-splinter</a>
-and <a href="https://pypi.python.org/pypi/pytest-bdd">pytest-bdd</a> extensions.</p>
+test it with <a href="http://pytest.org/">pytest</a> + <a href="https://pypi.python.org/pypi/pytest-splinter">pytest-splinter</a> and
+<a href="https://pypi.python.org/pypi/pytest-bdd">pytest-bdd</a> extensions.</p>
 <p>This guide is aimed at developers with some experience in Python and web
 programming. This means some familiarity with things like &ldquo;url routing&rdquo;, &ldquo;http
 requests&rdquo;, &ldquo;html templating&rdquo; and the general MVC pattern. Basic knowledge about
 how to use the command line interface (we&rsquo;ll use <code>bash</code>) is also assumed.</p>
-<p>This is more of a barebones &ldquo;how-to&rdquo; guide. I&rsquo;m far from being a &ldquo;testing
-expert&rdquo;, and I don&rsquo;t want to get into why anybody should be doing TDD or get
-into the depths of what&rsquo;s a &ldquo;unit&rdquo;, &ldquo;functional&rdquo;, &ldquo;acceptance&rdquo; or &ldquo;integration&rdquo;
-test. You can read about this in Harry&rsquo;s book or elsewhere online; for example
-<a href="http://c2.com/cgi/wiki?TestDrivenDevelopment">here</a> or
-<a href="http://gojko.net/">here</a>.</p>
+<p>This is a very basic how-to-get-started-with-testing guide. Hopefully enough to
+overcome the initial learning barrier. I&rsquo;m not a &ldquo;testing expert&rdquo;, and I don&rsquo;t
+want to get into why anybody should be doing TDD or get into the depths of
+what&rsquo;s a &ldquo;unit&rdquo;, &ldquo;functional&rdquo;, &ldquo;acceptance&rdquo; or &ldquo;integration&rdquo; test. You can read
+more about testing in Harry&rsquo;s book, <a href="https://en.wikipedia.org/wiki/Test-driven_development">wikipedia</a> and other
+authoritative sources like <a href="http://c2.com/cgi/wiki?TestDrivenDevelopment">this one</a> or <a href="http://www.amazon.com/Test-Driven-Development-Kent-Beck/dp/0321146530">that one</a>.
+<a href="http://gojko.net/">http://gojko.net/</a> is another useful resource.</p>
 <p>Both this guide and the source of the app are on <a href="https://github.com/vanzaj/tdd-pytest">github</a>.</p>
 <h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
 <p>There are two types of code blocks:</p>
 <p>command line &ndash; what you need to type in a terminal (<code>$</code> indicates standard
-<a href="https://www.gnu.org/software/bash/">bash</a> shell prompt)</p>
+<a href="https://www.gnu.org/software/bash/">bash</a> shell prompt),</p>
 <pre><code class="bash">$ whoami
 ivan
 $ python -V
@@ -200,5 +202,5 @@ def test_sanity():
 
 <!--
 MkDocs version : 0.14.0
-Build Date UTC : 2015-12-13 04:06:10.544035
+Build Date UTC : 2016-01-05 07:59:21.329162
 -->
