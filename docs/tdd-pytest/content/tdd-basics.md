@@ -301,8 +301,8 @@ process goes as follows:
 2. Once we have a functional test that fails, we start to think about how to
 	write code that can get it to pass (or at least to get past its current
 	failure). We now use one or more unit tests to define how we want our code to
-	behave—the idea is that each line of production code we write should be tested
-	by (at least) one of our unit tests.
+	behave -- the idea is that each line of production code we write should be
+    tested by (at least) one of our unit tests.
 3. Once we have a failing unit test, we write the smallest amount of
 	application code we can, just enough to get the unit test to pass. We may
 	iterate between steps 2 and 3 a few times, until we think the functional test
@@ -315,8 +315,8 @@ Let's create a unit test for the todo app using flask's test client[^3] which
 does the same thing as the `test_can_check_homepage()` inside
 `functional_test.py`:
 
-[^3]: "client" is a generic way to refer to applications like web browsers
-running on the user's side.
+[^3]: "client" is a generic way to refer to code or application running on the
+user's side (like web browsers) in the client-server software design model.
 
 ```python
 # tests/unit_test.py
@@ -347,7 +347,8 @@ E   ImportError: No module named 'todoapp'
 ```
 
 The app's module is not in the Python's path, so `pytest` can't import it. The
-simplest fix is to set the `PYTHONPATH` shell variable to the current dir:
+simplest way to fix this is to set the `PYTHONPATH` shell variable to the
+current dir:
 
 ```bash
 $ export PYTHONPATH='.'
@@ -380,12 +381,13 @@ At this point your project dir should look like (excluding `*.pyc` and
 ├── setup.cfg
 ├── tests
 │   ├── functional_test.py
-│   └── unit_test.py
+│   └── unit_test.py
 ├── todoapp
 │   ├── __init__.py
 │   └── templates
+│       └── home.html
 └── venv
-    ├── bin
+    └── bin
 ...
 ```
 
@@ -394,7 +396,8 @@ At this point your project dir should look like (excluding `*.pyc` and
 
 Time to get back to functional tests. The next step is to add user input
 functionality. This means adding `<form>` and `<input>` elements in the app's
-html template. Let's do an explicit test for this inside `tests/unit_test.py`:
+html template. Let's do an explicit test for this inside `tests/unit_test.py` 
+instead of testing full template:
 
 ```python
 def test_home_page_returns_correct_html(client):
@@ -404,6 +407,8 @@ def test_home_page_returns_correct_html(client):
     assert '<form' in html
     assert '<input' in html
 ```
+
+Think about why we didn't "close" the elements.
 
 Update the html template to make the test pass.
 
@@ -451,6 +456,7 @@ def test_can_check_homepage(browser):
 ```
 
 What-you-type-is-what-you-get...
+
 At this point we need to decide what to do when the user hits "Enter".
 
 
