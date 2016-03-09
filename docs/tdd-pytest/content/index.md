@@ -21,7 +21,7 @@ more about testing in Harry's book, [wikipedia][wiki:TDD] and other
 authoritative sources like [this one][c2:TDD] or [that one][book:KB-TDD].
 <http://gojko.net/> is another useful resource.
 
-Both this guide and the source of the app are on [github](https://github.com/vanzaj/tdd-pytest).
+Both this guide and the source of the app are on [GitHub](https://github.com/vanzaj/tdd-pytest).
 
 [book:HP-TDDPy]: http://chimera.labs.oreilly.com/books/1234000000754
 [pydoc:unittest]: https://docs.python.org/3.5/library/unittest.html
@@ -49,7 +49,7 @@ $ python -V
 Python 3.5.0
 ```
 
-and python code -- what you need to type inside a text editor (the first line
+and Python code -- what you need to type inside a text editor (the first line
 starting with `#` indicates the path to file relative to project's root
 directory.
 
