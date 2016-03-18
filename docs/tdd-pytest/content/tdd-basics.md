@@ -198,8 +198,9 @@ def test_home_page_header():
     client = app.test_client()
     rsp = client.get('/')
     assert rsp.status == '200 OK'
-    assert '<title>Todo</title>' in rsp.get_data(as_text=True)
-    assert '<h1>Todo list</h1>' in rsp.get_data(as_text=True)
+	html = rsp.get_data(as_text=True)
+    assert '<title>Todo</title>' in html
+    assert '<h1>Todo list</h1>' in html
 ```
 
 This looks quite similar to our function test except that we are using `flask`'s
@@ -238,7 +239,7 @@ ____________________________ test_home_page_header _____________________________
         client = app.test_client()
         rsp = client.get('/')
         assert rsp.status == '200 OK'
->       assert '<title>Todo</title>' in rsp.get_data(as_text=True)
+>       assert '<title>Todo</title>' in html
 E       assert '<title>Todo</title>' in 'hello world'
 
 tests/unit_test.py:8: AssertionError
@@ -297,13 +298,164 @@ tests/unit_test.py::test_home_page_header PASSED
 ```
 
 Use `py.test -ra` if you want to see what is causing `pytest-warnings`.  If you
-start the app and run `$py.test tests/function_test.py` it should also pass
-without failing. It's time to add more functional tests.
+start the app and run `$ python tests/function_test.py` it should also pass
+without failing. It's time to add more functional tests and make it
+"pytest-complient".
+
+```python
+# tests/function_test.py
+
+from splinter import Browser
+
+URL = 'http://localhost:5000'
+
+# Edith has heard about a cool new online to-do app.
+def test_checkout_app():
+	browser = Browser()
+    # She goes to check out its homepage
+    browser.visit(URL)
+
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
+    header = browser.find_by_tag('h1').first
+    assert 'todos' in header.text
+
+    # She is invited to enter a to-do item straight away
+    inputbox = browser.find_by_id('new_todo_item').first
+    assert inputbox['placeholder'] == 'Enter a to-do item'
+
+	# ...
+```
+
+The html template needs a `<form>` and `<input>` elements. But unit test needs
+to be updated first.
+
+```python
+# tests/unit_test.py
+
+from todoapp import app
+
+def test_home_page_header():
+    client = app.test_client()
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '<title>Todo</title>' in html
+    assert '<h1>Todo list</h1>' in html
+    assert '<form>' in html
+    assert '<input id=' in html
+```
+
+Run the test and see it fail. Then update the template file.
+
+```html
+<!-- todoapp/templates/home.html -->
+
+<html>
+<head>
+  <title>Todo</title>
+</head>
+<body>
+  <h1>Todo list</h1>
+  <form>
+    <input id="new_todo_item" name="todo_text"/>
+  </form>
+</body>
+</html>
+```
+
+----
+
+*Big reorg: half-backed bits and pieces below*
+
+
+## Testing user interactions
+
+At this point we need to decide what to do when the user hits "Enter" preferably
+without resorting to [css tricks][SO:form-wo-submit] and javascript. Turns out
+that an html form containing a single `<input>` is implicitly submitted on
+"Enter"[^4]. All we need to do is to specify that submit method is "POST" and to
+add a list or table to the template which will display submitted todo items. But
+write the tests first!
+
+[SO:form-wo-submit]: http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button
+
+[^4]: Introduced in HTML 2.0, and currently described under
+      [implicit submission](http://www.w3.org/TR/html5/forms.html#form-submission-0)
+      section of HTML 5 specification.
+
+```python
+# tests/unit_test.py
+
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '<form' in html
+    assert '<input' in html
+    assert '<table' in html
+
+def test_home_page_accepts_post_request(client):
+    rsp = client.post('/', data={"todo_text": "do something useful"})
+    assert rsp.status == '200 OK'
+    assert 'do something useful' in rsp.get_data(as_text=True)
+```
+
+Now update the template.
+
+```html
+<!-- todoapp/templates/home.html -->
+<body>
+  <h1>My todos list</h1>
+  <form method="POST">
+    <input id="new_todo_item" name="todo_text"/>
+  </form>
+
+  <table id="todo_list_table"></table>
+</body>
+```
+
+Run unit tests.
+
+```bash
+$ py.test tests/unit_test.py
+================================ test session starts =================================
+
+    def test_home_page_accepts_post_request(client):
+        rsp = client.post('/')
+>       assert rsp.status == '200 OK'
+E       assert '405 METHOD NOT ALLOWED' == '200 OK'
+E         - 405 METHOD NOT ALLOWED
+E         + 200 OK
+
+tests/unit_test.py:21: AssertionError
+=============== 1 failed, 1 passed, 1 pytest-warnings in 0.03 seconds ================
+
+```
+
+Flask routes accept only "GET" requests by default, but this is easily changed
+using `methods` keyword. We will also need to import flask's `request` object.
+
+
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    if request.method == 'POST':
+        new_item = request.form.get('todo_text')
+        return 'got new item: %s' % new_item
+    return render_template('home.html')
+```
+
+
 
 
 -----
 
-*Big reorg: half-backed bits and pieces below*
 
 
 One "small" problem with the above approach is that `browser` is a global object
@@ -586,153 +738,6 @@ if __name__ == "__main__":
 ```
 
 `py.test` should now pass.
-
-
-## Testing user interactions
-
-Time to get back to functional tests. The next step is to add user input
-functionality. This means adding `<form>` and `<input>` elements in the app's
-html template. Let's do an explicit test for this inside `tests/unit_test.py`
-instead of testing full template:
-
-```python
-def test_home_page_returns_correct_html(client):
-    rsp = client.get('/')
-    assert rsp.status == '200 OK'
-    html = rsp.get_data(as_text=True)
-    assert '<form' in html
-    assert '<input' in html
-```
-
-Think about why we didn't "close" the elements.
-
-Update the html template to make the test pass.
-
-```html
-<!-- todoapp/templates/home.html -->
-
-<body>
-  <h1>My todos list</h1>
-  <form>
-    <input id="new_todo_item" name="todo_text"/>
-  </form>
-  </table>
-</body>
-```
-
-We can now update our functional test:
-
-```python
-# tests/function_test.html
-
-# ...
-
-# Edith has heard about a cool new online to-do app.
-def test_can_check_homepage(browser):
-    # She goes to check out its homepage
-    browser.visit(url('/'))
-
-    # She notices the page title and header mention to-do lists
-    assert 'To-Do' in browser.title
-    header = browser.find_by_tag('h1').first
-    assert 'todos' in header.text
-
-    # She is invited to enter a to-do item straight away
-    inputbox = browser.find_by_id('new_todo_item').first
-    assert inputbox['placeholder'] == 'Enter a to-do item'
-
-    # She types "Buy peacock feathers" into a text box
-    inputbox.type('Buy peacock feathers')
-
-    # When she hits enter...
-    inputbox.type('\n')
-
-    # ...the page updates, and now the page lists
-    # "1: Buy peacock feathers" as an item in a to-do list
-```
-
-What-you-type-is-what-you-get...
-
-At this point we need to decide what to do when the user hits "Enter" preferably
-without resorting to [css tricks][SO:form-wo-submit] and javascript. Turns out
-that an html form containing a single `<input>` is implicitly submitted on
-"Enter"[^4]. All we need to do is to specify that submit method is "POST" and to
-add a list or table to the template which will display submitted todo items. But
-write the tests first!
-
-[SO:form-wo-submit]: http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button
-
-[^4]: Introduced in HTML 2.0, and currently described under
-      [implicit submission](http://www.w3.org/TR/html5/forms.html#form-submission-0)
-      section of HTML 5 specification.
-
-```python
-# tests/unit_test.py
-
-def test_home_page_returns_correct_html(client):
-    rsp = client.get('/')
-    assert rsp.status == '200 OK'
-    html = rsp.get_data(as_text=True)
-    assert '<form' in html
-    assert '<input' in html
-    assert '<table' in html
-
-def test_home_page_accepts_post_request(client):
-    rsp = client.post('/', data={"todo_text": "do something useful"})
-    assert rsp.status == '200 OK'
-    assert 'do something useful' in rsp.get_data(as_text=True)
-```
-
-Now update the template.
-
-```html
-<!-- todoapp/templates/home.html -->
-<body>
-  <h1>My todos list</h1>
-  <form method="POST">
-    <input id="new_todo_item" name="todo_text"/>
-  </form>
-
-  <table id="todo_list_table"></table>
-</body>
-```
-
-Run unit tests.
-
-```bash
-$ py.test tests/unit_test.py
-================================ test session starts =================================
-
-    def test_home_page_accepts_post_request(client):
-        rsp = client.post('/')
->       assert rsp.status == '200 OK'
-E       assert '405 METHOD NOT ALLOWED' == '200 OK'
-E         - 405 METHOD NOT ALLOWED
-E         + 200 OK
-
-tests/unit_test.py:21: AssertionError
-=============== 1 failed, 1 passed, 1 pytest-warnings in 0.03 seconds ================
-
-```
-
-Flask routes accept only "GET" requests by default, but this is easily changed
-using `methods` keyword. We will also need to import flask's `request` object.
-
-
-```python
-from flask import Flask, render_template, request
-
-app = Flask(__name__)
-
-
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        new_item = request.form.get('todo_text')
-        return 'got new item: %s' % new_item
-    return render_template('home.html')
-```
-
 
 
 ----
