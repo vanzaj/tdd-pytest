@@ -7,7 +7,10 @@ docs:
 	mkdocs serve
 
 ghp:
-	rm -rf ./build/*
-	mkdocs gh-deploy
+	# mkdocs gh-deploy --clean
+	# Mar 2016: deploying with mkdocs fails for unknown reason 
+	mkdocs build
+	ghp-import -n build
+	git push origin gh-pages
 
 .PHONY: help
