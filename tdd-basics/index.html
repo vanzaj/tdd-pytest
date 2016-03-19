@@ -3,7 +3,10 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
   
   <title>TDD Basics - TDD with pytest</title>
   
@@ -22,6 +25,8 @@
   <script>
     // Current page data
     var mkdocs_page_name = "TDD Basics";
+    var mkdocs_page_input_path = "tdd-basics.md";
+    var mkdocs_page_url = "/tdd-basics/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -68,8 +73,6 @@
                     <li><a class="toctree-l4" href="#project-setup">Project setup</a></li>
                 
                     <li><a class="toctree-l4" href="#starting-the-actual-app">Starting the actual app</a></li>
-                
-                    <li><a class="toctree-l4" href="#unit-tests-vs-functional-tests">Unit tests vs functional tests</a></li>
                 
                     <li><a class="toctree-l4" href="#testing-user-interactions">Testing user interactions</a></li>
                 
@@ -129,7 +132,7 @@ Part I of <a href="http://chimera.labs.oreilly.com/books/1234000000754">TDD with
 <p>Fist of all we need to create the project&rsquo;s directory structure and install
 minimal requirements into a &ldquo;virtualenv&rdquo;. Then we write the first test which
 should obviously &ldquo;fail&rdquo; since there is no actual application code written at
-this point. And then we write a minimal Flask app, just to get the test to pass.</p>
+this point. And then we write a minimal Flask app, to get the test to pass.</p>
 <pre><code class="bash">$ cd ~/Projects
 $ mkdir tdd-todoapp
 $ cd tdd-todoapp
@@ -146,15 +149,23 @@ $ pip install pytest pytest-splinter
 <pre><code class="bash">$ mkdir todoapp tests
 </code></pre>
 
-<p>Edit <code>tests/functional_tests.py</code>:</p>
-<pre><code class="python"># tests/functional_tests.py
+<p>Manual testing of a web application usually involves the following steps:</p>
+<ol>
+<li>open a web browser</li>
+<li>navigate to some url</li>
+<li>check some page rendering detail</li>
+<li>close the browser</li>
+</ol>
+<p>Here is how to do this with <a href="https://splinter.readthedocs.org/">splinter</a>:</p>
+<pre><code class="python"># tests/functional_test.py
+
 from splinter import Browser
 
-BASE_URL = 'http://localhost:5000'
-
-with Browser() as browser:
-    browser.visit(BASE_URL)
-    assert browser.is_text_present('hello world')
+browser = Browser()
+url = 'http://localhost'
+browser.visit(url)
+assert browser.is_text_present('hello world')
+browser.quit()
 </code></pre>
 
 <p>Run the test:</p>
@@ -168,8 +179,9 @@ Traceback (most recent call last):
 <p><code>AssertionError</code> indicates test failure. Note that we haven&rsquo;t actually used
 <code>pytest</code> yet. The file containing our first test is just a regular python
 script<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>.</p>
-<p>Now, create a basic flask app:</p>
+<p>Now, let&rsquo;s create a basic flask app:</p>
 <pre><code class="python"># todoapp/__init__.py
+
 from flask import Flask
 
 app = Flask(__name__)
@@ -178,7 +190,7 @@ app = Flask(__name__)
 def hello():
     return 'hello world'
 
-if __name__ == &quot;__main__&quot;:
+if __name__ == '__main__':
     app.run()
 </code></pre>
 
@@ -187,8 +199,10 @@ if __name__ == &quot;__main__&quot;:
  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
 </code></pre>
 
-<p>Rerun the test and see it pass.
-At this point you should have the following files in your project directory:</p>
+<p>Rerun the test and see it&hellip; fail. By default flask apps are running on port
+5000. Fix the <code>url</code> in <code>functional_test.py</code> to take that into account, rerun
+the test, and now it should pass.</p>
+<p>At this point you should have the following files in your project&rsquo;s directory:</p>
 <pre><code>├── tests
 │   └── functional_test.py
 ├── todoapp
@@ -200,45 +214,414 @@ At this point you should have the following files in your project directory:</p>
 </code></pre>
 
 <h2 id="starting-the-actual-app">Starting the actual app<a class="headerlink" href="#starting-the-actual-app" title="Permanent link">&para;</a></h2>
-<p>We can use <code>functional_test.py</code> to guide the development of the todo app.  This
+<p>We can use <code>functional_test.py</code> to guide the development of our todo app. This
 can be as simple as using comments to write a walk-through the app&rsquo;s features by
 an imaginary user. This is a variation on the
 &ldquo;<a href="http://tom.preston-werner.com/2010/08/23/readme-driven-development.html">Readme driven development</a>&rdquo; theme.</p>
 <pre><code class="python"># tests/functional_test.py
+
 from splinter import Browser
 
-BASE_URL = 'http://localhost:5000'
-
-with Browser() as browser:
-    browser.visit(BASE_URL)
-    assert browser.is_text_present('hello world')
-
+browser = Browser()
+url = 'http://localhost:5000'
 
 # Edith has heard about a cool new online to-do app.
 # She goes to check out its homepage
+browser.visit(url)
 
 # She notices the page title and header mention to-do lists
+assert 'Todo' in browser.title
+header = browser.find_by_tag('h1').first
+assert 'Todo list' in header.text
 
 # She is invited to enter a to-do item straight away
 
-# She types &quot;Buy peacock feathers&quot; into a text box (Edith's hobby
-# is tying fly-fishing lures)
+# She types &quot;Buy peacock feathers&quot; into a text box
 
 # When she hits enter, the page updates, and now the page lists
 # &quot;1: Buy peacock feathers&quot; as an item in a to-do list
 
-# There is still a text box inviting her to add another item. She
-# enters &quot;Use peacock feathers to make a fly&quot; (Edith is very methodical)
+# ...
+browser.quit()
+</code></pre>
 
-# The page updates again, and now shows both items on her list
+<p>We don&rsquo;t need to figure out how to test all the features at once.
+Thinking about 2 or 3 &ldquo;next&rdquo; features provides enough context to start
+implementing the app. But before doing that, we need to discuss about the
+difference between &ldquo;functional&rdquo; and &ldquo;unit&rdquo; tests.</p>
+<h3 id="functional-vs-unit-tests">Functional vs unit tests<a class="headerlink" href="#functional-vs-unit-tests" title="Permanent link">&para;</a></h3>
+<p>Considering an application from a user&rsquo;s perspective helps to stay focused on
+building what&rsquo;s actually needed. Writing tests from the same perspective allows
+verification that those needed parts of the app behave or function as intended.
+Hence they are called <strong>functional</strong> tests. Note that there is no reference to
+<code>flask</code> anywhere in <code>funcational_test.py</code>. The user is not expected to know
+anything about the app&rsquo;s implementation details. He or she is only interested in
+functionality. The developer, on the other hand, must make all the technical
+implementation decisions, which framework to use, how to organize the code&hellip;
+Actual application code also need to be tested, and done so from the
+developper&rsquo;s perspective. Such tests are called <strong>unit</strong> tests. &ldquo;Unit&rdquo; refers to
+a &ldquo;unit of software code&rdquo;. Usually it means a function (<code>def foo():...</code>) or a on
+object&rsquo;s method, but there isn&rsquo;t really a more precise or agreed upon definition
+of &ldquo;unit of code&rdquo;.</p>
+<h3 id="unittest-vs-pytest">Unittest vs pytest<a class="headerlink" href="#unittest-vs-pytest" title="Permanent link">&para;</a></h3>
+<p><code>Unittest</code> is the standard Python module for creating and running tests. The
+name is confusing because this module is used to write both &ldquo;unit&rdquo; and
+&ldquo;functional&rdquo; tests. <code>Pytest</code> is an alternative testing package. It can also be
+used to write both &ldquo;unit&rdquo; and &ldquo;functional&rdquo; tests. The syntax for writing tests
+using <code>pytest</code> requires less boilerplate code compared to <code>unittest</code>, and it
+feels more in line with &ldquo;Simple is better than complex&rdquo; (see
+<a href="https://www.python.org/dev/peps/pep-0020/">pep20</a>). <code>Pytest</code> also performs test
+discovery, execution, and reporting. In that sense, it is an alternative to
+<code>unittest</code> + <a href="https://nose.readthedocs.org/"><code>nose</code></a> combination.</p>
+<p>Enough &ldquo;theory&rdquo;, back to the app. We need to change our &ldquo;hello world&rdquo; app into
+a &ldquo;todo&rdquo; app. According to our first couple of functional requirments, the app
+should return an html page with a title and a header containing &ldquo;Todo&rdquo; text.
+It is very simple to do this in <code>flask</code>, but let&rsquo;s write a unit test for it
+first. Test-driven means test code first, actual code later.</p>
+<pre><code class="python"># tests/unit_test.py
 
-# Edith wonders whether the site will remember her list. Then she sees
-# that the site has generated a unique URL for her -- there is some
-# explanatory text to that effect.
+from todoapp import app
 
-# She visits that URL - her to-do list is still there.
+def test_home_page_header():
+    client = app.test_client()
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '&lt;title&gt;Todo&lt;/title&gt;' in html
+    assert '&lt;h1&gt;Todo list&lt;/h1&gt;' in html
+</code></pre>
 
-# Satisfied, she goes back to sleep
+<p>This looks quite similar to our function test except that we are using <code>flask</code>&lsquo;s
+built-in test client<sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup> and checking explicitly for a valid HTTP response code.
+Also, the test is written as a function. This is how tests (both unit and
+functional) are usually created when using <code>pytest</code>.  <code>Pytest</code> comes with a
+<code>py.test</code> command which discovers and runs the tests. Without arguments, it
+looks recursively for <code>tests/</code> directories and <code>*_test.py</code> files , and executes
+any function or method with a <code>test</code> inside it&rsquo;s name. For now we want to run
+only the unit tests.</p>
+<pre><code class="bash">$ py.test tests/unit_test.py
+============================= test session starts ==============================
+... skip lines ...
+_____________________ ERROR collecting tests/unit_test.py ______________________
+tests/unit_test.py:2: in &lt;module&gt;
+    from todoapp import app
+E   ImportError: No module named 'todoapp'
+================== 1 pytest-warnings, 1 error in 0.01 seconds ==================
+</code></pre>
+
+<p>The app&rsquo;s module is not in the Python&rsquo;s path. The simplest way to fix this is
+to set the <code>PYTHONPATH</code> shell variable to the current dir:</p>
+<pre><code class="bash">$ export PYTHONPATH='.'
+$ py.test tests/unit_test.py
+=================================== FAILURES ===================================
+____________________________ test_home_page_header _____________________________
+
+    def test_home_page_header():
+        client = app.test_client()
+        rsp = client.get('/')
+        assert rsp.status == '200 OK'
+&gt;       assert '&lt;title&gt;Todo&lt;/title&gt;' in html
+E       assert '&lt;title&gt;Todo&lt;/title&gt;' in 'hello world'
+
+tests/unit_test.py:8: AssertionError
+================= 1 failed, 1 pytest-warnings in 0.02 seconds ==================
+</code></pre>
+
+<p>So, the app responds to a GET request, but of course it is not returning any
+html. Note that we don&rsquo;t need to have the app running while executing unit
+tests. Let&rsquo;s fix the app:</p>
+<pre><code class="python"># todoapp/__init__.py
+
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+if __name__ == &quot;__main__&quot;:
+    app.run()
+</code></pre>
+
+<p>And create a page template.</p>
+<pre><code class="bash">$ mkdir todoapp/templates
+</code></pre>
+
+<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
+
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;Todo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Todo list&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>Rerun the test with a verbose flag on.</p>
+<pre><code class="bash">$ py.test -v tests/unit_test.py
+============================= test session starts ==============================
+... skip lines ...
+collected 1 items
+
+tests/unit_test.py::test_home_page_header PASSED
+
+================= 1 passed, 1 pytest-warnings in 0.03 seconds ==================
+</code></pre>
+
+<p>Use <code>py.test -ra</code> if you want to see what is causing <code>pytest-warnings</code>.  If you
+start the app and run <code>$ python tests/function_test.py</code> it should also pass
+without failing. It&rsquo;s time to add more functional tests and make it
+&ldquo;pytest-complient&rdquo;.</p>
+<pre><code class="python"># tests/function_test.py
+
+from splinter import Browser
+
+URL = 'http://localhost:5000'
+
+# Edith has heard about a cool new online to-do app.
+def test_checkout_app():
+    browser = Browser()
+    # She goes to check out its homepage
+    browser.visit(URL)
+
+    # She notices the page title and header mention to-do lists
+    assert 'To-Do' in browser.title
+    header = browser.find_by_tag('h1').first
+    assert 'todos' in header.text
+
+    # She is invited to enter a to-do item straight away
+    inputbox = browser.find_by_id('new_todo_item').first
+    assert inputbox['placeholder'] == 'Enter a to-do item'
+
+    # ...
+</code></pre>
+
+<p>The html template needs a <code>&lt;form&gt;</code> and <code>&lt;input&gt;</code> elements. But unit test needs
+to be updated first.</p>
+<pre><code class="python"># tests/unit_test.py
+
+from todoapp import app
+
+def test_home_page_header():
+    client = app.test_client()
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '&lt;title&gt;Todo&lt;/title&gt;' in html
+    assert '&lt;h1&gt;Todo list&lt;/h1&gt;' in html
+    assert '&lt;form&gt;' in html
+    assert '&lt;input id=' in html
+</code></pre>
+
+<p>Run the test and see it fail. Then update the template file.</p>
+<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
+
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;Todo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Todo list&lt;/h1&gt;
+  &lt;form&gt;
+    &lt;input id=&quot;new_todo_item&quot; name=&quot;todo_text&quot;/&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<hr />
+<p><em>Big reorg: half-backed bits and pieces below</em></p>
+<h2 id="testing-user-interactions">Testing user interactions<a class="headerlink" href="#testing-user-interactions" title="Permanent link">&para;</a></h2>
+<p>At this point we need to decide what to do when the user hits &ldquo;Enter&rdquo; preferably
+without resorting to <a href="http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button">css tricks</a> and javascript. Turns out
+that an html form containing a single <code>&lt;input&gt;</code> is implicitly submitted on
+&ldquo;Enter&rdquo;<sup id="fnref:4"><a class="footnote-ref" href="#fn:4" rel="footnote">3</a></sup>. All we need to do is to specify that submit method is &ldquo;POST&rdquo; and to
+add a list or table to the template which will display submitted todo items. But
+write the tests first!</p>
+<pre><code class="python"># tests/unit_test.py
+
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    html = rsp.get_data(as_text=True)
+    assert '&lt;form' in html
+    assert '&lt;input' in html
+    assert '&lt;table' in html
+
+def test_home_page_accepts_post_request(client):
+    rsp = client.post('/', data={&quot;todo_text&quot;: &quot;do something useful&quot;})
+    assert rsp.status == '200 OK'
+    assert 'do something useful' in rsp.get_data(as_text=True)
+</code></pre>
+
+<p>Now update the template.</p>
+<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
+&lt;body&gt;
+  &lt;h1&gt;My todos list&lt;/h1&gt;
+  &lt;form method=&quot;POST&quot;&gt;
+    &lt;input id=&quot;new_todo_item&quot; name=&quot;todo_text&quot;/&gt;
+  &lt;/form&gt;
+
+  &lt;table id=&quot;todo_list_table&quot;&gt;&lt;/table&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p>Run unit tests.</p>
+<pre><code class="bash">$ py.test tests/unit_test.py
+================================ test session starts =================================
+
+    def test_home_page_accepts_post_request(client):
+        rsp = client.post('/')
+&gt;       assert rsp.status == '200 OK'
+E       assert '405 METHOD NOT ALLOWED' == '200 OK'
+E         - 405 METHOD NOT ALLOWED
+E         + 200 OK
+
+tests/unit_test.py:21: AssertionError
+=============== 1 failed, 1 passed, 1 pytest-warnings in 0.03 seconds ================
+
+</code></pre>
+
+<p>Flask routes accept only &ldquo;GET&rdquo; requests by default, but this is easily changed
+using <code>methods</code> keyword. We will also need to import flask&rsquo;s <code>request</code> object.</p>
+<pre><code class="python">from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    if request.method == 'POST':
+        new_item = request.form.get('todo_text')
+        return 'got new item: %s' % new_item
+    return render_template('home.html')
+</code></pre>
+
+<hr />
+<p>One &ldquo;small&rdquo; problem with the above approach is that <code>browser</code> is a global object
+whose state could be modifed by different test functions. Global variables are
+particularly bad in the testing context where we must be sure that the same test
+functions are always executed under identical conditions. To ensure this, each
+test function should create and destroy it&rsquo;s context. To avoid code repetition,
+we can use pytest&rsquo;s <a href="https://pytest.org/latest/fixture.html">fixtures</a><sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup>:</p>
+<pre><code class="python"># tests/functional_tests.py
+import pytest
+from splinter import Browser
+
+@pytest.yield_fixture(scope='session')
+def browser():
+    b = Browser()
+    yield b
+    b.quit()
+
+url = 'http://localhost:5000'
+
+# Edith has heard about a cool new online to-do app.
+# She goes to check out its homepage
+def test_check_homepage(browser):
+    browser.visit(url)
+    assert browser.is_text_present('???')
+
+# She notices the page title and header mention to-do lists
+def test_todo_in_page_title(browser):
+    browser.visit(url)
+    assert 'Todo' in browser.title
+</code></pre>
+
+<p>We can run these two tests using <code>$ py.test tests/functional_tests.py</code>.  Of
+course both assertions will fail. We also notice that opening and closing a
+browser takes a couple of seconds.</p>
+<hr />
+<p>On the other hand, unit tests (the concept and not the
+<code>unittest</code> module) are supposed to test an application from the developer&rsquo;s
+point of view. Unit tests should cover very specific and usually very small
+parts of code. Therefore, there should be many more unit tests than functional
+tests.  Because of that unit tests must be fast. Opening and closing browsers is
+not very useful in this context. As described in the TDDPy book, the development
+process goes as follows:</p>
+<ol>
+<li>Start by writing a functional test, describing the new functionality from
+    the user&rsquo;s point of view.</li>
+<li>Once we have a functional test that fails, we start to think about how to
+    write code that can get it to pass (or at least to get past its current
+    failure). We now use one or more unit tests to define how we want our code to
+    behave &ndash; the idea is that each line of production code we write should be
+    tested by (at least) one of our unit tests.</li>
+<li>Once we have a failing unit test, we write the smallest amount of
+    application code we can, just enough to get the unit test to pass. We may
+    iterate between steps 2 and 3 a few times, until we think the functional test
+    will get a little further.</li>
+<li>Now we can rerun our functional tests and see if they pass, or get a little
+    further. That may prompt us to write some new unit tests, and some new code,
+    and so on.</li>
+</ol>
+<p>Let&rsquo;s create a unit test for the todo app using flask&rsquo;s test client[^3] which
+does the same thing as the <code>test_can_check_homepage()</code> inside
+<code>functional_test.py</code>:</p>
+<pre><code class="python"># tests/unit_test.py
+
+import pytest
+from todoapp import app
+
+@pytest.fixture(scope='session')
+def client():
+    app.config['TESTING'] = True
+    return app.test_client()
+
+def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    assert '&lt;title&gt;To-Do&lt;/title&gt;' in rsp.get_data(as_text=True)
+</code></pre>
+
+<p>and run it</p>
+<pre><code class="bash">$ py.test tests/unit_test.py
+========================================== ERRORS ==========================================
+___________________________ ERROR collecting tests/unit_test.py ____________________________
+tests/unit_test.py:2: in &lt;module&gt;
+    import todoapp
+E   ImportError: No module named 'todoapp'
+</code></pre>
+
+<p>The app&rsquo;s module is not in the Python&rsquo;s path, so <code>pytest</code> can&rsquo;t import it. The
+simplest way to fix this is to set the <code>PYTHONPATH</code> shell variable to the
+current dir:</p>
+<pre><code class="bash">$ export PYTHONPATH='.'
+
+$ py.test -v tests/unit_test.py
+=================================== test session starts ====================================
+
+tests/unit_test.py::test_home_page_returns_correct_html PASSED
+
+======================= 1 passed, 1 pytest-warnings in 0.02 seconds
+</code></pre>
+
+<p>0.02 seconds is much better compared to 2.5 seconds needed to start a browser.</p>
+<p>Since we know that the <code>home</code> view should return <code>home.html</code> template,
+we can check the returned html as follows:</p>
+<pre><code class="python">def test_home_page_returns_correct_html(client):
+    rsp = client.get('/')
+    assert rsp.status == '200 OK'
+    tpl = app.jinja_env.get_template('home.html')
+    assert tpl.render() == rsp.get_data(as_text=True)
+</code></pre>
+
+<p>At this point your project dir should look like (excluding <code>*.pyc</code> and
+<code>__pycache__</code> dir):</p>
+<pre><code>├── setup.cfg
+├── tests
+│   ├── functional_test.py
+│   └── unit_test.py
+├── todoapp
+│   ├── __init__.py
+│   └── templates
+│       └── home.html
+└── venv
+    └── bin
+...
 </code></pre>
 
 <p><code>Unittest</code> is the standard Python module for creating and running tests.
@@ -354,221 +737,7 @@ if __name__ == &quot;__main__&quot;:
 </code></pre>
 
 <p><code>py.test</code> should now pass.</p>
-<h2 id="unit-tests-vs-functional-tests">Unit tests vs functional tests<a class="headerlink" href="#unit-tests-vs-functional-tests" title="Permanent link">&para;</a></h2>
-<p>The tests so far are called &ldquo;functional&rdquo; because they test an application from
-the perspective of a user; open a browser, visit a url, etc. These tests work
-without any knowledge about the app&rsquo;s implementation details. Almost any kind of
-web application, written in Python or another language, can be tested with
-<code>pytest</code> and <code>splinter</code>. On the other hand, unit tests (the concept and not the
-<code>unittest</code> module) are supposed to test an application from the developer&rsquo;s
-point of view. Unit tests should cover very specific and usually very small
-parts of code. Therefore, there should be many more unit tests than functional
-tests.  Because of that unit tests must be fast. Opening and closing browsers is
-not very useful in this context. As described in the TDDPy book, the development
-process goes as follows:</p>
-<ol>
-<li>Start by writing a functional test, describing the new functionality from
-    the user&rsquo;s point of view.</li>
-<li>Once we have a functional test that fails, we start to think about how to
-    write code that can get it to pass (or at least to get past its current
-    failure). We now use one or more unit tests to define how we want our code to
-    behave &ndash; the idea is that each line of production code we write should be
-    tested by (at least) one of our unit tests.</li>
-<li>Once we have a failing unit test, we write the smallest amount of
-    application code we can, just enough to get the unit test to pass. We may
-    iterate between steps 2 and 3 a few times, until we think the functional test
-    will get a little further.</li>
-<li>Now we can rerun our functional tests and see if they pass, or get a little
-    further. That may prompt us to write some new unit tests, and some new code,
-    and so on.</li>
-</ol>
-<p>Let&rsquo;s create a unit test for the todo app using flask&rsquo;s test client<sup id="fnref:3"><a class="footnote-ref" href="#fn:3" rel="footnote">3</a></sup> which
-does the same thing as the <code>test_can_check_homepage()</code> inside
-<code>functional_test.py</code>:</p>
-<pre><code class="python"># tests/unit_test.py
-
-import pytest
-from todoapp import app
-
-@pytest.fixture(scope='session')
-def client():
-    app.config['TESTING'] = True
-    return app.test_client()
-
-def test_home_page_returns_correct_html(client):
-    rsp = client.get('/')
-    assert rsp.status == '200 OK'
-    assert '&lt;title&gt;To-Do&lt;/title&gt;' in rsp.get_data(as_text=True)
-</code></pre>
-
-<p>and run it</p>
-<pre><code class="bash">$ py.test tests/unit_test.py
-========================================== ERRORS ==========================================
-___________________________ ERROR collecting tests/unit_test.py ____________________________
-tests/unit_test.py:2: in &lt;module&gt;
-    import todoapp
-E   ImportError: No module named 'todoapp'
-</code></pre>
-
-<p>The app&rsquo;s module is not in the Python&rsquo;s path, so <code>pytest</code> can&rsquo;t import it. The
-simplest way to fix this is to set the <code>PYTHONPATH</code> shell variable to the
-current dir:</p>
-<pre><code class="bash">$ export PYTHONPATH='.'
-
-$ py.test -v tests/unit_test.py
-=================================== test session starts ====================================
-
-tests/unit_test.py::test_home_page_returns_correct_html PASSED
-
-======================= 1 passed, 1 pytest-warnings in 0.02 seconds
-</code></pre>
-
-<p>0.02 seconds is much better compared to 2.5 seconds needed to start a browser.</p>
-<p>Since we know that the <code>home</code> view should return <code>home.html</code> template,
-we can check the returned html as follows:</p>
-<pre><code class="python">def test_home_page_returns_correct_html(client):
-    rsp = client.get('/')
-    assert rsp.status == '200 OK'
-    tpl = app.jinja_env.get_template('home.html')
-    assert tpl.render() == rsp.get_data(as_text=True)
-</code></pre>
-
-<p>At this point your project dir should look like (excluding <code>*.pyc</code> and
-<code>__pycache__</code> dir):</p>
-<pre><code>├── setup.cfg
-├── tests
-│   ├── functional_test.py
-│   └── unit_test.py
-├── todoapp
-│   ├── __init__.py
-│   └── templates
-│       └── home.html
-└── venv
-    └── bin
-...
-</code></pre>
-
-<h2 id="testing-user-interactions">Testing user interactions<a class="headerlink" href="#testing-user-interactions" title="Permanent link">&para;</a></h2>
-<p>Time to get back to functional tests. The next step is to add user input
-functionality. This means adding <code>&lt;form&gt;</code> and <code>&lt;input&gt;</code> elements in the app&rsquo;s
-html template. Let&rsquo;s do an explicit test for this inside <code>tests/unit_test.py</code>
-instead of testing full template:</p>
-<pre><code class="python">def test_home_page_returns_correct_html(client):
-    rsp = client.get('/')
-    assert rsp.status == '200 OK'
-    html = rsp.get_data(as_text=True)
-    assert '&lt;form' in html
-    assert '&lt;input' in html
-</code></pre>
-
-<p>Think about why we didn&rsquo;t &ldquo;close&rdquo; the elements.</p>
-<p>Update the html template to make the test pass.</p>
-<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
-
-&lt;body&gt;
-  &lt;h1&gt;My todos list&lt;/h1&gt;
-  &lt;form&gt;
-    &lt;input id=&quot;new_todo_item&quot; name=&quot;todo_text&quot;/&gt;
-  &lt;/form&gt;
-  &lt;/table&gt;
-&lt;/body&gt;
-</code></pre>
-
-<p>We can now update our functional test:</p>
-<pre><code class="python"># tests/function_test.html
-
-# ...
-
-# Edith has heard about a cool new online to-do app.
-def test_can_check_homepage(browser):
-    # She goes to check out its homepage
-    browser.visit(url('/'))
-
-    # She notices the page title and header mention to-do lists
-    assert 'To-Do' in browser.title
-    header = browser.find_by_tag('h1').first
-    assert 'todos' in header.text
-
-    # She is invited to enter a to-do item straight away
-    inputbox = browser.find_by_id('new_todo_item').first
-    assert inputbox['placeholder'] == 'Enter a to-do item'
-
-    # She types &quot;Buy peacock feathers&quot; into a text box
-    inputbox.type('Buy peacock feathers')
-
-    # When she hits enter...
-    inputbox.type('\n')
-
-    # ...the page updates, and now the page lists
-    # &quot;1: Buy peacock feathers&quot; as an item in a to-do list
-</code></pre>
-
-<p>What-you-type-is-what-you-get&hellip;</p>
-<p>At this point we need to decide what to do when the user hits &ldquo;Enter&rdquo; preferably
-without resorting to <a href="http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button">css tricks</a> and javascript. Turns out
-that an html form containing a single <code>&lt;input&gt;</code> is implicitly submitted on
-&ldquo;Enter&rdquo;<sup id="fnref:4"><a class="footnote-ref" href="#fn:4" rel="footnote">4</a></sup>. All we need to do is to specify that submit method is &ldquo;POST&rdquo; and to
-add a list or table to the template which will display submitted todo items. But
-write the tests first!</p>
-<pre><code class="python"># tests/unit_test.py
-
-def test_home_page_returns_correct_html(client):
-    rsp = client.get('/')
-    assert rsp.status == '200 OK'
-    html = rsp.get_data(as_text=True)
-    assert '&lt;form' in html
-    assert '&lt;input' in html
-    assert '&lt;table' in html
-
-def test_home_page_accepts_post_request(client):
-    rsp = client.post('/', data={&quot;todo_text&quot;: &quot;do something useful&quot;})
-    assert rsp.status == '200 OK'
-    assert 'do something useful' in rsp.get_data(as_text=True)
-</code></pre>
-
-<p>Now update the template.</p>
-<pre><code class="html">&lt;!-- todoapp/templates/home.html --&gt;
-&lt;body&gt;
-  &lt;h1&gt;My todos list&lt;/h1&gt;
-  &lt;form method=&quot;POST&quot;&gt;
-    &lt;input id=&quot;new_todo_item&quot; name=&quot;todo_text&quot;/&gt;
-  &lt;/form&gt;
-
-  &lt;table id=&quot;todo_list_table&quot;&gt;&lt;/table&gt;
-&lt;/body&gt;
-</code></pre>
-
-<p>Run unit tests.</p>
-<pre><code class="bash">$ py.test tests/unit_test.py
-================================ test session starts =================================
-
-    def test_home_page_accepts_post_request(client):
-        rsp = client.post('/')
-&gt;       assert rsp.status == '200 OK'
-E       assert '405 METHOD NOT ALLOWED' == '200 OK'
-E         - 405 METHOD NOT ALLOWED
-E         + 200 OK
-
-tests/unit_test.py:21: AssertionError
-=============== 1 failed, 1 passed, 1 pytest-warnings in 0.03 seconds ================
-
-</code></pre>
-
-<p>Flask routes accept only &ldquo;GET&rdquo; requests by default, but this is easily changed
-using <code>methods</code> keyword. We will also need to import flask&rsquo;s <code>request</code> object.</p>
-<pre><code class="python">from flask import Flask, render_template, request
-
-app = Flask(__name__)
-
-
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        new_item = request.form.get('todo_text')
-        return 'got new item: %s' % new_item
-    return render_template('home.html')
-</code></pre>
-
+<hr />
 <p>If you want a more explicit error message, change the assertion line like this:</p>
 <pre><code class="python">
     assert any(row.text == '1: Buy peacock feathers' for row in rows), \
@@ -589,14 +758,10 @@ and runs all the tests, and then reports which ones have passed or failed.&#160;
 arguments. Inside a test function we get an instance of the return or yield
 object.&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
-<li id="fn:3">
-<p>&ldquo;client&rdquo; is a generic way to refer to code or application running on the
-user&rsquo;s side (like web browsers) in the client-server software design model.&#160;<a class="footnote-backref" href="#fnref:3" rev="footnote" title="Jump back to footnote 3 in the text">&#8617;</a></p>
-</li>
 <li id="fn:4">
 <p>Introduced in HTML 2.0, and currently described under
   <a href="http://www.w3.org/TR/html5/forms.html#form-submission-0">implicit submission</a>
-  section of HTML 5 specification.&#160;<a class="footnote-backref" href="#fnref:4" rev="footnote" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+  section of HTML 5 specification.&#160;<a class="footnote-backref" href="#fnref:4" rev="footnote" title="Jump back to footnote 3 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -607,7 +772,7 @@ user&rsquo;s side (like web browsers) in the client-server software design model
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../tdd-advanced/" class="btn btn-neutral float-right" title="TDD Advanced"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../tdd-advanced/" class="btn btn-neutral float-right" title="TDD Advanced">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href=".." class="btn btn-neutral" title="About"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -635,7 +800,7 @@ user&rsquo;s side (like web browsers) in the client-server software design model
 <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/vanzaj/tdd-pytest" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
