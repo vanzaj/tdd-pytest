@@ -64,11 +64,12 @@ Traceback (most recent call last):
 
 `AssertionError` indicates test failure. Note that we haven't actually used
 `pytest` yet. The file containing our first test is just a regular python
-script[^1].
+script.
 
-[^1]: Non-trivial apps will have many tests organized in multiple functions or
-classes. That's when we need to use a "test runner" -- a command that discovers
-and runs all the tests, and then reports which ones have passed or failed.
+!!! note
+    Non-trivial apps will have many tests organized in multiple functions or
+    classes. That's when we need to use a "test runner" -- a command that discovers
+    and runs all the tests, and then reports which ones have passed or failed.
 
 Now, let's create a basic flask app:
 
@@ -108,7 +109,7 @@ At this point you should have the following files in your project's directory:
 └── venv
     ├── bin
     ├── include
-	...
+    ...
 ```
 
 ## Starting the actual app
@@ -198,13 +199,13 @@ def test_home_page_header():
     client = app.test_client()
     rsp = client.get('/')
     assert rsp.status == '200 OK'
-	html = rsp.get_data(as_text=True)
+    html = rsp.get_data(as_text=True)
     assert '<title>Todo</title>' in html
     assert '<h1>Todo list</h1>' in html
 ```
 
 This looks quite similar to our function test except that we are using `flask`'s
-built-in test client[^2] and checking explicitly for a valid HTTP response code.
+built-in test *client* and checking explicitly for a valid HTTP response code.
 Also, the test is written as a function. This is how tests (both unit and
 functional) are usually created when using `pytest`.  `Pytest` comes with a
 `py.test` command which discovers and runs the tests. Without arguments, it
@@ -212,8 +213,9 @@ looks recursively for `tests/` directories and `*_test.py` files , and executes
 any function or method with a `test` inside it's name. For now we want to run
 only the unit tests.
 
-[^2]: "client" is a generic way to refer to code or application running on the
-user's side (like web browsers) in the client-server software design model.
+!!! note "Note on *client*"
+     "Client" is a generic way to refer to code or application running on the
+     user's side (like web browsers) in the client-server software design model.
 
 ```bash
 $ py.test tests/unit_test.py
@@ -311,7 +313,7 @@ URL = 'http://localhost:5000'
 
 # Edith has heard about a cool new online to-do app.
 def test_checkout_app():
-	browser = Browser()
+    browser = Browser()
     # She goes to check out its homepage
     browser.visit(URL)
 
@@ -324,7 +326,7 @@ def test_checkout_app():
     inputbox = browser.find_by_id('new_todo_item').first
     assert inputbox['placeholder'] == 'Enter a to-do item'
 
-	# ...
+    # ...
 ```
 
 The html template needs a `<form>` and `<input>` elements. But unit test needs
@@ -373,16 +375,14 @@ Run the test and see it fail. Then update the template file.
 
 At this point we need to decide what to do when the user hits "Enter" preferably
 without resorting to [css tricks][SO:form-wo-submit] and javascript. Turns out
-that an html form containing a single `<input>` is implicitly submitted on
-"Enter"[^4]. All we need to do is to specify that submit method is "POST" and to
+that an html form containing a single `<input>` is [implicitly
+submitted][W3:implicit-form-submit] on
+"Enter". All we need to do is to specify that submit method is "POST" and to
 add a list or table to the template which will display submitted todo items. But
 write the tests first!
 
 [SO:form-wo-submit]: http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button
-
-[^4]: Introduced in HTML 2.0, and currently described under
-      [implicit submission](http://www.w3.org/TR/html5/forms.html#form-submission-0)
-      section of HTML 5 specification.
+[W3:implicit-form-submit]: http://www.w3.org/TR/html5/forms.html#form-submission-0
 
 ```python
 # tests/unit_test.py
@@ -463,9 +463,10 @@ whose state could be modifed by different test functions. Global variables are
 particularly bad in the testing context where we must be sure that the same test
 functions are always executed under identical conditions. To ensure this, each
 test function should create and destroy it's context. To avoid code repetition,
-we can use pytest's [fixtures](https://pytest.org/latest/fixture.html)[^2]:
+we can use pytest's [fixtures](https://pytest.org/latest/fixture.html):
 
-[^2]: yield fixtures allow very simple setup/teardown syntax
+!!! note
+    Yield fixtures allow very simple setup/teardown syntax.
 
 ```python
 # tests/functional_tests.py
@@ -511,17 +512,17 @@ process goes as follows:
 1. Start by writing a functional test, describing the new functionality from
     the user's point of view.
 2. Once we have a functional test that fails, we start to think about how to
-	write code that can get it to pass (or at least to get past its current
-	failure). We now use one or more unit tests to define how we want our code to
-	behave -- the idea is that each line of production code we write should be
+    write code that can get it to pass (or at least to get past its current
+    failure). We now use one or more unit tests to define how we want our code to
+    behave -- the idea is that each line of production code we write should be
     tested by (at least) one of our unit tests.
 3. Once we have a failing unit test, we write the smallest amount of
-	application code we can, just enough to get the unit test to pass. We may
-	iterate between steps 2 and 3 a few times, until we think the functional test
-	will get a little further.
+    application code we can, just enough to get the unit test to pass. We may
+    iterate between steps 2 and 3 a few times, until we think the functional test
+    will get a little further.
 4. Now we can rerun our functional tests and see if they pass, or get a little
-	further. That may prompt us to write some new unit tests, and some new code,
-	and so on.
+    further. That may prompt us to write some new unit tests, and some new code,
+    and so on.
 
 Let's create a unit test for the todo app using flask's test client[^3] which
 does the same thing as the `test_can_check_homepage()` inside

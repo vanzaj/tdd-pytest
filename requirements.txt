@@ -1,4 +1,4 @@
 Flask==0.10.1
-mkdocs==0.14.0
-pytest==2.8.3
-pytest-splinter==1.7.0
+mkdocs==0.15.3
+pytest==2.9.1
+pytest-splinter==1.7.3
