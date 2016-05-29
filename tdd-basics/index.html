@@ -178,7 +178,13 @@ Traceback (most recent call last):
 
 <p><code>AssertionError</code> indicates test failure. Note that we haven&rsquo;t actually used
 <code>pytest</code> yet. The file containing our first test is just a regular python
-script<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>.</p>
+script.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Non-trivial apps will have many tests organized in multiple functions or
+classes. That&rsquo;s when we need to use a &ldquo;test runner&rdquo; &ndash; a command that discovers
+and runs all the tests, and then reports which ones have passed or failed.</p>
+</div>
 <p>Now, let&rsquo;s create a basic flask app:</p>
 <pre><code class="python"># todoapp/__init__.py
 
@@ -292,13 +298,18 @@ def test_home_page_header():
 </code></pre>
 
 <p>This looks quite similar to our function test except that we are using <code>flask</code>&lsquo;s
-built-in test client<sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup> and checking explicitly for a valid HTTP response code.
+built-in test <em>client</em> and checking explicitly for a valid HTTP response code.
 Also, the test is written as a function. This is how tests (both unit and
 functional) are usually created when using <code>pytest</code>.  <code>Pytest</code> comes with a
 <code>py.test</code> command which discovers and runs the tests. Without arguments, it
 looks recursively for <code>tests/</code> directories and <code>*_test.py</code> files , and executes
 any function or method with a <code>test</code> inside it&rsquo;s name. For now we want to run
 only the unit tests.</p>
+<div class="admonition note">
+<p class="admonition-title">Note on <em>client</em></p>
+<p>&ldquo;Client&rdquo; is a generic way to refer to code or application running on the
+ user&rsquo;s side (like web browsers) in the client-server software design model.</p>
+</div>
 <pre><code class="bash">$ py.test tests/unit_test.py
 ============================= test session starts ==============================
 ... skip lines ...
@@ -437,8 +448,9 @@ def test_home_page_header():
 <h2 id="testing-user-interactions">Testing user interactions<a class="headerlink" href="#testing-user-interactions" title="Permanent link">&para;</a></h2>
 <p>At this point we need to decide what to do when the user hits &ldquo;Enter&rdquo; preferably
 without resorting to <a href="http://stackoverflow.com/questions/477691/submitting-a-form-by-pressing-enter-without-a-submit-button">css tricks</a> and javascript. Turns out
-that an html form containing a single <code>&lt;input&gt;</code> is implicitly submitted on
-&ldquo;Enter&rdquo;<sup id="fnref:4"><a class="footnote-ref" href="#fn:4" rel="footnote">3</a></sup>. All we need to do is to specify that submit method is &ldquo;POST&rdquo; and to
+that an html form containing a single <code>&lt;input&gt;</code> is <a href="http://www.w3.org/TR/html5/forms.html#form-submission-0">implicitly
+submitted</a> on
+&ldquo;Enter&rdquo;. All we need to do is to specify that submit method is &ldquo;POST&rdquo; and to
 add a list or table to the template which will display submitted todo items. But
 write the tests first!</p>
 <pre><code class="python"># tests/unit_test.py
@@ -506,7 +518,11 @@ whose state could be modifed by different test functions. Global variables are
 particularly bad in the testing context where we must be sure that the same test
 functions are always executed under identical conditions. To ensure this, each
 test function should create and destroy it&rsquo;s context. To avoid code repetition,
-we can use pytest&rsquo;s <a href="https://pytest.org/latest/fixture.html">fixtures</a><sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup>:</p>
+we can use pytest&rsquo;s <a href="https://pytest.org/latest/fixture.html">fixtures</a>:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Yield fixtures allow very simple setup/teardown syntax.</p>
+</div>
 <pre><code class="python"># tests/functional_tests.py
 import pytest
 from splinter import Browser
@@ -654,7 +670,7 @@ def test_can_check_homepage(browser):
 </code></pre>
 
 <p>Note how the <code>browser</code> instance has been converted into a function decorated
-with <code>yield_fixture</code><sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup>. It does the job of both <code>setUp()</code> and <code>tearDown()</code>
+with <code>yield_fixture</code><sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">1</a></sup>. It does the job of both <code>setUp()</code> and <code>tearDown()</code>
 methods of a <code>unittest.TestCase</code>. It is possible to organize tests into classes,
 but it is not required.</p>
 <p>Before running <code>pytest</code>, create a <code>setup.cfg</code> file to exclude <code>venv</code> (and other
@@ -748,20 +764,10 @@ if __name__ == &quot;__main__&quot;:
 <div class="footnote">
 <hr />
 <ol>
-<li id="fn:1">
-<p>Non-trivial apps will have many tests organized in multiple functions or
-classes. That&rsquo;s when we need to use a &ldquo;test runner&rdquo; &ndash; a command that discovers
-and runs all the tests, and then reports which ones have passed or failed.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
 <li id="fn:2">
 <p>Pytest fixtures must be callable objects passed to test functions as
 arguments. Inside a test function we get an instance of the return or yield
-object.&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
-</li>
-<li id="fn:4">
-<p>Introduced in HTML 2.0, and currently described under
-  <a href="http://www.w3.org/TR/html5/forms.html#form-submission-0">implicit submission</a>
-  section of HTML 5 specification.&#160;<a class="footnote-backref" href="#fnref:4" rev="footnote" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+object.&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
