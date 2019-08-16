@@ -7,7 +7,7 @@ Part I of [TDD with Python][book:TDDPy] book.
 
 ## Project setup
 
-Fist of all we need to create the project's directory structure and install
+First of all we need to create the project's directory structure and install
 minimal requirements into a "virtualenv". Then we write the first test which
 should obviously "fail" since there is no actual application code written at
 this point. And then we write a minimal Flask app, to get the test to pass.
